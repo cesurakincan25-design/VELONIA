@@ -491,11 +491,252 @@ body:has(a:hover) #cursor, body:has(button:hover) #cursor { transform: scale(2);
   color: var(--neon-purple);
 }
 
-.chars-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 20px;
+/* ============================================================
+   CHARACTERS PAGE v2 — Toolbar, Search, List View, Carousel
+   ============================================================ */
+
+/* Toolbar */
+.chars-toolbar {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 16px; flex-wrap: wrap;
 }
+.chars-search-wrap {
+  position: relative; flex: 1; min-width: 220px;
+}
+.chars-search-icon {
+  position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+  font-size: 14px; pointer-events: none;
+}
+.chars-search {
+  width: 100%; padding: 10px 36px 10px 36px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px; color: var(--text-primary);
+  font-size: 13px; outline: none; transition: border-color 0.2s;
+}
+.chars-search:focus { border-color: var(--neon-purple); }
+.chars-search::placeholder { color: var(--text-dim); }
+.chars-search-clear {
+  position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; color: var(--text-secondary);
+  cursor: pointer; font-size: 14px; padding: 4px;
+}
+.chars-view-toggle { display: flex; gap: 4px; flex-shrink: 0; }
+.view-btn {
+  width: 34px; height: 34px; border-radius: 6px;
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+  color: var(--text-secondary); cursor: pointer; font-size: 16px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+}
+.view-btn.active, .view-btn:hover {
+  background: rgba(176,96,255,0.2); border-color: var(--neon-purple); color: var(--neon-purple);
+}
+
+/* List View */
+.chars-grid.list-view {
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+.chars-grid.list-view .char-card {
+  aspect-ratio: unset; height: 80px;
+  display: flex; align-items: center; flex-direction: row;
+  border-radius: 10px;
+  background: var(--glass); border: 1px solid var(--glass-border);
+}
+.chars-grid.list-view .char-card-img {
+  width: 80px; height: 80px; flex-shrink: 0;
+  object-fit: cover; border-radius: 9px 0 0 9px;
+  filter: grayscale(60%) brightness(0.8);
+}
+.chars-grid.list-view .char-avatar-placeholder {
+  width: 80px; height: 80px; flex-shrink: 0;
+  font-size: 32px; border-radius: 9px 0 0 9px;
+  filter: none;
+}
+.chars-grid.list-view .char-card-overlay { display: none; }
+.chars-grid.list-view .char-card-glow { display: none; }
+.chars-grid.list-view .char-card-info {
+  position: static; padding: 0 16px;
+  display: flex; align-items: center; gap: 16px; flex: 1;
+}
+.chars-grid.list-view .char-card-type { opacity: 1; transform: none; margin-bottom: 0; }
+.chars-grid.list-view .char-card-name { font-size: 14px; }
+.chars-grid.list-view .char-card-alt { opacity: 1; transform: none; }
+.chars-grid.list-view .char-card-tags { opacity: 1; transform: none; margin-top: 0; margin-left: auto; }
+.chars-grid.list-view .char-card-list-company {
+  font-size: 11px; color: var(--text-secondary); flex-shrink: 0;
+}
+.chars-grid.list-view .char-list-actions {
+  display: flex; gap: 6px; padding-right: 12px; flex-shrink: 0;
+}
+
+/* Multi-category badges on cards */
+.char-cats {
+  display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 6px;
+}
+.char-cat-badge {
+  padding: 2px 7px; border-radius: 4px;
+  font-size: 8px; letter-spacing: 1.5px; text-transform: uppercase;
+  font-family: 'Orbitron', monospace;
+}
+
+/* Image Carousel */
+.char-card-carousel {
+  position: absolute; inset: 0; overflow: hidden;
+}
+.carousel-track {
+  display: flex; height: 100%;
+  transition: transform 0.4s cubic-bezier(0.4,0,0.2,1);
+}
+.carousel-slide {
+  min-width: 100%; height: 100%; flex-shrink: 0;
+}
+.carousel-slide img {
+  width: 100%; height: 100%; object-fit: cover;
+  filter: grayscale(100%) brightness(0.6);
+  transition: filter 0.5s;
+}
+.char-card:hover .carousel-slide img { filter: grayscale(0%) brightness(0.8); }
+.carousel-dots {
+  position: absolute; bottom: 54px; left: 0; right: 0;
+  display: flex; justify-content: center; gap: 4px; z-index: 5;
+}
+.carousel-dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: rgba(255,255,255,0.3); cursor: pointer;
+  transition: all 0.2s;
+}
+.carousel-dot.active { background: white; width: 14px; border-radius: 3px; }
+.carousel-nav {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  width: 28px; height: 28px; border-radius: 50%;
+  background: rgba(5,7,26,0.7); border: 1px solid rgba(255,255,255,0.15);
+  color: white; font-size: 12px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; transition: opacity 0.2s; z-index: 6;
+}
+.char-card:hover .carousel-nav { opacity: 1; }
+.carousel-nav.prev { left: 6px; }
+.carousel-nav.next { right: 6px; }
+
+/* Status dot on card */
+.char-status-dot {
+  position: absolute; top: 12px; right: 12px;
+  width: 8px; height: 8px; border-radius: 50%; z-index: 5;
+  box-shadow: 0 0 6px currentColor;
+}
+
+/* ============================================================
+   PROFILE MODAL v2
+   ============================================================ */
+
+/* Hero image nav arrows */
+.profile-hero-nav {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  width: 36px; height: 36px; border-radius: 50%;
+  background: rgba(5,7,26,0.7); border: 1px solid rgba(255,255,255,0.15);
+  color: white; font-size: 14px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; transition: opacity 0.2s; z-index: 5;
+}
+.profile-hero:hover .profile-hero-nav { opacity: 1; }
+.profile-hero-nav.prev { left: 12px; }
+.profile-hero-nav.next { right: 56px; }
+
+/* Profile tabs */
+.profile-tabs {
+  display: flex; gap: 0;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  padding: 0 32px;
+  background: rgba(5,7,26,0.5);
+}
+.profile-tab {
+  padding: 14px 20px; cursor: pointer;
+  font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+  font-family: 'Orbitron', monospace; color: var(--text-secondary);
+  border-bottom: 2px solid transparent; transition: all 0.2s;
+  margin-bottom: -1px;
+}
+.profile-tab:hover { color: var(--text-primary); }
+.profile-tab.active { color: var(--neon-cyan); border-bottom-color: var(--neon-cyan); }
+
+/* Profile tab panels */
+.profile-panel { display: none; padding: 28px 32px; }
+.profile-panel.active { display: block; }
+
+/* Relations grid */
+.profile-rels {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(200px,1fr)); gap: 10px;
+  margin-top: 12px;
+}
+.profile-rel-card {
+  padding: 12px 14px; border-radius: 8px;
+  background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07);
+  cursor: pointer; transition: all 0.2s;
+}
+.profile-rel-card:hover {
+  background: rgba(176,96,255,0.08); border-color: rgba(176,96,255,0.3);
+  transform: translateY(-2px);
+}
+.profile-rel-label {
+  font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--text-secondary); font-family: 'Orbitron', monospace;
+  margin-bottom: 6px;
+}
+.profile-rel-value { font-size: 13px; font-weight: 600; }
+
+/* Custom fields table */
+.profile-custom-table { width: 100%; border-collapse: collapse; }
+.profile-custom-table td {
+  padding: 8px 12px; font-size: 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.profile-custom-table td:first-child {
+  color: var(--text-secondary); width: 40%; text-transform: uppercase;
+  font-size: 10px; letter-spacing: 1px;
+}
+
+/* Owner badge */
+.profile-owner-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 12px; border-radius: 20px;
+  background: rgba(255,215,0,0.1); border: 1px solid rgba(255,215,0,0.3);
+  font-size: 11px; color: var(--gold); margin-top: 8px;
+}
+
+/* Stat bars in profile */
+.profile-stats-grid {
+  display: flex; flex-direction: column; gap: 10px;
+}
+.psg-row { }
+.psg-header {
+  display: flex; justify-content: space-between; margin-bottom: 5px;
+}
+.psg-key { font-size: 11px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; }
+.psg-val { font-size: 12px; font-weight: 600; }
+.psg-bar {
+  height: 4px; background: rgba(255,255,255,0.06); border-radius: 2px; overflow: hidden;
+}
+.psg-fill {
+  height: 100%; border-radius: 2px;
+  transition: width 0.8s cubic-bezier(0.4,0,0.2,1);
+}
+
+/* Thumbnail strip */
+.profile-thumb-strip {
+  display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap;
+}
+.profile-thumb {
+  width: 52px; height: 52px; border-radius: 6px;
+  object-fit: cover; cursor: pointer; opacity: 0.6;
+  border: 2px solid transparent; transition: all 0.2s;
+}
+.profile-thumb:hover, .profile-thumb.active {
+  opacity: 1; border-color: var(--neon-purple);
+}
+
+.chars-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; }
 
 /* Character Card */
 .char-card {
@@ -1815,19 +2056,56 @@ body:has(a:hover) #cursor, body:has(button:hover) #cursor { transform: scale(2);
   <div class="section-header">
     <div class="section-title">Character <span>Database</span></div>
     <div class="section-line"></div>
-    <div class="section-badge">Live</div>
+    <div class="section-badge" id="char-count-badge">Loading...</div>
   </div>
 
+  <!-- Search + Filter Bar -->
+  <div class="chars-toolbar">
+    <div class="chars-search-wrap">
+      <span class="chars-search-icon">🔍</span>
+      <input class="chars-search" id="char-search" placeholder="Search by name, tag, company..." oninput="VELONIA.CharPage.search(this.value)">
+      <button class="chars-search-clear" id="char-search-clear" onclick="VELONIA.CharPage.clearSearch()" style="display:none;">✕</button>
+    </div>
+    <div class="chars-view-toggle">
+      <button class="view-btn active" id="view-grid-btn" onclick="VELONIA.CharPage.setView('grid')" title="Grid">⊞</button>
+      <button class="view-btn" id="view-list-btn" onclick="VELONIA.CharPage.setView('list')" title="List">☰</button>
+    </div>
+  </div>
+
+  <!-- Category Filters -->
   <div class="chars-filters" id="char-filters">
-    <button class="filter-chip active" data-filter="all" onclick="filterChars(this)">All</button>
-    <button class="filter-chip" data-filter="idol" onclick="filterChars(this)">Idol</button>
-    <button class="filter-chip" data-filter="actor" onclick="filterChars(this)">Actor</button>
-    <button class="filter-chip" data-filter="criminal" onclick="filterChars(this)">Criminal</button>
-    <button class="filter-chip" data-filter="superhuman" onclick="filterChars(this)">Superhuman</button>
-    <button class="filter-chip" data-filter="human" onclick="filterChars(this)">Human</button>
+    <button class="filter-chip active" data-filter="all" onclick="VELONIA.CharPage.filter(this,'all')">All</button>
+    <button class="filter-chip" data-filter="idol" onclick="VELONIA.CharPage.filter(this,'idol')">🎤 Idol</button>
+    <button class="filter-chip" data-filter="actor" onclick="VELONIA.CharPage.filter(this,'actor')">🎬 Actor</button>
+    <button class="filter-chip" data-filter="criminal" onclick="VELONIA.CharPage.filter(this,'criminal')">🖤 Criminal</button>
+    <button class="filter-chip" data-filter="superhuman" onclick="VELONIA.CharPage.filter(this,'superhuman')">⚡ Superhuman</button>
+    <button class="filter-chip" data-filter="human" onclick="VELONIA.CharPage.filter(this,'human')">👤 Human</button>
+    <button class="filter-chip" data-filter="producer" onclick="VELONIA.CharPage.filter(this,'producer')">🎛 Producer</button>
+    <button class="filter-chip" data-filter="other" onclick="VELONIA.CharPage.filter(this,'other')">◼ Other</button>
   </div>
 
+  <!-- Sort row -->
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+    <span style="font-size:11px;color:var(--text-secondary);letter-spacing:1px;">SORT:</span>
+    <select class="form-select" id="char-sort" onchange="VELONIA.CharPage.sort(this.value)" style="padding:6px 12px;font-size:11px;width:auto;">
+      <option value="name">Name A–Z</option>
+      <option value="name-desc">Name Z–A</option>
+      <option value="type">Category</option>
+      <option value="company">Company</option>
+      <option value="newest">Newest First</option>
+    </select>
+    <span id="chars-result-count" style="font-size:11px;color:var(--text-dim);margin-left:auto;"></span>
+  </div>
+
+  <!-- Grid -->
   <div class="chars-grid" id="chars-grid"></div>
+
+  <!-- Empty state -->
+  <div id="chars-empty" style="display:none;text-align:center;padding:60px 20px;">
+    <div style="font-size:48px;margin-bottom:16px;">🔍</div>
+    <div style="font-family:'Orbitron',monospace;font-size:14px;color:var(--text-secondary);">No characters found</div>
+    <div style="font-size:12px;color:var(--text-dim);margin-top:8px;">Try a different search or filter</div>
+  </div>
 </div>
 </div>
 
@@ -2831,25 +3109,71 @@ window.VELONIA = (function() {
 
     // ── Characters ───────────────────────────────────────
     characters(filter = 'all') {
-      const grid = document.getElementById('chars-grid'); if (!grid) return;
-      grid.innerHTML = DAL.chars.byType(filter).map(c => this._charCard(c)).join('');
+      // Delegate to CharPage module (defined below in v5 patch)
+      if (window.VELONIA.CharPage) window.VELONIA.CharPage.render();
+      else {
+        // Fallback before CharPage loads
+        const grid = document.getElementById('chars-grid'); if (!grid) return;
+        grid.innerHTML = DAL.chars.byType(filter).map(c => this._charCard(c)).join('');
+      }
     },
 
     _charCard(c) {
-      const hasImg = c.imgUrl && c.imgUrl.trim();
-      const imgPart = hasImg
-        ? `<img class="char-card-img" src="${Utils.esc(c.imgUrl)}" alt="${Utils.esc(c.name)}" onerror="this.style.display='none'">`
-        : `<div class="char-avatar-placeholder">${Utils.esc(c.emoji)}</div>`;
+      // Category badges
+      const cats   = c.categories && c.categories.length > 0 ? c.categories : [c.type||'human'];
+      const catColors = {
+        idol:'#ff2d9b',actor:'#00e5ff',criminal:'#ff3d3d',superhuman:'#b060ff',
+        human:'#4d9fff',producer:'#ffd700',songwriter:'#3ecf8e',other:'#607d8b'
+      };
+      const catBadges = cats.slice(0,3).map(cat =>
+        `<span class="char-cat-badge" style="background:${catColors[cat]||'#607d8b'}22;border:1px solid ${catColors[cat]||'#607d8b'}55;color:${catColors[cat]||'#aaa'}">${cat}</span>`
+      ).join('');
+
+      // Status dot
+      const statusColors = { active:'#00e5ff', inactive:'#607d8b', missing:'#ffd700', deceased:'#ff3d3d', unknown:'#b060ff' };
+      const statusDot = `<div class="char-status-dot" style="background:${statusColors[c.status||'active']};color:${statusColors[c.status||'active']};" title="${c.status||'active'}"></div>`;
+
+      // Image carousel OR placeholder
+      const imgs = (c.imgUrls && c.imgUrls.length > 0) ? c.imgUrls : (c.imgUrl ? [c.imgUrl] : []);
+      let mediaPart = '';
+      if (imgs.length > 1) {
+        const slides = imgs.map(url =>
+          `<div class="carousel-slide"><img src="${Utils.esc(url)}" alt="${Utils.esc(c.name)}" onerror="this.parentElement.style.display='none'"></div>`
+        ).join('');
+        const dots = imgs.map((_,i) =>
+          `<span class="carousel-dot${i===0?' active':''}" onclick="event.stopPropagation();VELONIA.CharPage.carouselGo(${c.id},${i})"></span>`
+        ).join('');
+        mediaPart = `
+          <div class="char-card-carousel" id="carousel-${c.id}">
+            <div class="carousel-track" id="carousel-track-${c.id}">${slides}</div>
+            ${imgs.length > 1 ? `
+              <button class="carousel-nav prev" onclick="event.stopPropagation();VELONIA.CharPage.carouselPrev(${c.id})">‹</button>
+              <button class="carousel-nav next" onclick="event.stopPropagation();VELONIA.CharPage.carouselNext(${c.id})">›</button>
+              <div class="carousel-dots">${dots}</div>` : ''}
+          </div>`;
+      } else if (imgs.length === 1) {
+        mediaPart = `<img class="char-card-img" src="${Utils.esc(imgs[0])}" alt="${Utils.esc(c.name)}" onerror="this.style.display='none'">`;
+      } else {
+        mediaPart = `<div class="char-avatar-placeholder">${Utils.esc(c.emoji)}</div>`;
+      }
+
+      // Company name
+      const state   = State.get();
+      const company = c.companyId ? (state.companies||[]).find(co=>co.id==c.companyId) : null;
+      const companyName = company ? company.name : (c.company||'');
+
       return `
-        <div class="char-card" onclick="VELONIA.Actions.openProfile(${c.id})">
-          ${imgPart}
+        <div class="char-card" onclick="VELONIA.Actions.openProfile(${c.id})" data-id="${c.id}" data-name="${Utils.esc(c.name.toLowerCase())}" data-cats="${cats.join(',')}" data-company="${Utils.esc((companyName||'').toLowerCase())}">
+          ${mediaPart}
           <div class="char-card-overlay"></div>
           <div class="char-card-glow"></div>
           <div class="char-card-border"></div>
+          ${statusDot}
           <div class="char-card-info">
-            <div class="char-card-type">${Utils.esc((c.type||'').toUpperCase())}</div>
+            <div class="char-cats">${catBadges}</div>
             <div class="char-card-name">${Utils.esc(c.name)}</div>
             ${c.altName ? `<div class="char-card-alt">// ${Utils.esc(c.altName)}</div>` : ''}
+            ${companyName ? `<div style="font-size:10px;color:var(--text-secondary);margin-top:3px;letter-spacing:1px;">${Utils.esc(companyName)}</div>` : ''}
             <div class="char-card-tags">${(c.tags||[]).slice(0,3).map(t=>`<span class="char-tag">${Utils.esc(t)}</span>`).join('')}</div>
           </div>
         </div>`;
@@ -2857,61 +3181,210 @@ window.VELONIA = (function() {
 
     profileModal(id) {
       const c = DAL.chars.byId(id); if (!c) return;
-      const modal    = document.getElementById('profile-modal');
-      const content  = document.getElementById('profile-modal-content');
+      const modal   = document.getElementById('profile-modal');
+      const content = document.getElementById('profile-modal-content');
+      const state   = State.get();
+
       const activeMode = c.mode || c.name;
       const modeData   = (c.modes && c.modes[activeMode]) || {};
       const accent     = modeData.accent || '#b060ff';
-      const desc       = modeData.desc   || c.bio;
       const hasModes   = c.modes && Object.keys(c.modes).length > 0;
-      const hasImg     = c.imgUrl && c.imgUrl.trim();
-      const heroPart   = hasImg
-        ? `<img class="profile-hero-bg" src="${Utils.esc(c.imgUrl)}" alt="${Utils.esc(c.name)}">`
+
+      // Hero images
+      const imgs    = (c.imgUrls && c.imgUrls.length > 0) ? c.imgUrls : (c.imgUrl ? [c.imgUrl] : []);
+      const primaryIdx = c._heroIdx !== undefined ? c._heroIdx : (c.primaryImgIdx || 0);
+      const heroUrl    = imgs[primaryIdx] || '';
+      const heroPart   = heroUrl
+        ? `<img class="profile-hero-bg" id="profile-hero-img" src="${Utils.esc(heroUrl)}" alt="${Utils.esc(c.name)}" onerror="this.style.display='none'">`
         : `<div class="profile-hero-placeholder">${Utils.esc(c.emoji)}</div>`;
-      const modeBtns   = hasModes
+
+      const thumbStrip = imgs.length > 1
+        ? `<div class="profile-thumb-strip" id="profile-thumbs">
+            ${imgs.map((url,i)=>`<img class="profile-thumb${i===primaryIdx?' active':''}" src="${Utils.esc(url)}" onclick="VELONIA.CharPage.heroSwitch(${id},${i})" onerror="this.style.display='none'">`).join('')}
+          </div>` : '';
+
+      // Hero nav arrows
+      const heroNavs = imgs.length > 1
+        ? `<button class="profile-hero-nav prev" onclick="VELONIA.CharPage.heroPrev(${id})">‹</button>
+           <button class="profile-hero-nav next" onclick="VELONIA.CharPage.heroNext(${id})">›</button>` : '';
+
+      // Mode buttons
+      const modeBtns = hasModes
         ? Object.keys(c.modes).map(m =>
             `<button class="mode-btn${activeMode===m?' active':''}" onclick="VELONIA.Actions.switchMode(${id},'${m}')">${Utils.esc(m)}</button>`
           ).join('') : '';
-      const stats = c.stats || {};
+
+      // Categories
+      const cats = c.categories && c.categories.length > 0 ? c.categories : [c.type||'human'];
+      const catColors = { idol:'#ff2d9b',actor:'#00e5ff',criminal:'#ff3d3d',superhuman:'#b060ff',human:'#4d9fff',producer:'#ffd700',songwriter:'#3ecf8e',other:'#607d8b' };
+      const catHtml = cats.map(cat=>
+        `<span class="char-cat-badge" style="padding:3px 10px;background:${catColors[cat]||'#607d8b'}22;border:1px solid ${catColors[cat]||'#607d8b'}55;color:${catColors[cat]||'#aaa'};font-size:9px;">${cat}</span>`
+      ).join('');
+
+      // Company
+      const company = c.companyId ? (state.companies||[]).find(co=>co.id==c.companyId) : null;
+      const companyName = company ? company.name : (c.company||'');
+
+      // Player owner
+      const player  = c.ownedById ? (state.players||[]).find(p=>p.id==c.ownedById) : null;
+      const ownerBadge = player
+        ? `<div class="profile-owner-badge">${player.emoji||'🎮'} Played by ${Utils.esc(player.displayName||player.username)}</div>` : '';
+
+      // Stats (active mode override or base)
+      const stats = (modeData.stats && Object.keys(modeData.stats).length > 0) ? modeData.stats : (c.stats || {});
+
+      // Relations summary
+      const groups  = (c.groupIds||[]).map(gid=>(state.groups||[]).find(g=>g.id==gid)).filter(Boolean);
+      const socials  = (c.socialAccIds||[]).map(aid=>(state.socialAccounts||[]).find(a=>a.id==aid)).filter(Boolean);
+      const dramas   = (state.dramas||[]).filter(d=>(d.castIds||[]).includes(c.id));
+      const albums   = (state.albums||[]).filter(a=>(a.characterIds||[]).includes(c.id));
+
+      const relCards = [
+        company  ? { label:'COMPANY',  value:company.name,   icon:company.emoji, click:`VELONIA.Router.navigate('companies')` } : null,
+        ...groups.map(g  => ({ label:'GROUP',    value:g.name,          icon:g.emoji||'⭐', click:`VELONIA.Notify.toast('⭐ ${Utils.esc(g.name)}')` })),
+        ...albums.map(a  => ({ label:'ALBUM',    value:a.title,         icon:a.emoji||'💿', click:`VELONIA.Router.navigate('music')` })),
+        ...dramas.map(d  => ({ label:'DRAMA',    value:d.title,         icon:d.emoji||'🎬', click:`VELONIA.Router.navigate('drama')` })),
+        ...socials.map(s => ({ label:s.platform.toUpperCase(), value:'@'+s.handle, icon:'📱', click:`VELONIA.Router.navigate('social')` })),
+      ].filter(Boolean);
+
+      const relHtml = relCards.length
+        ? `<div class="profile-rels">${relCards.map(r=>`
+            <div class="profile-rel-card" onclick="${r.click}">
+              <div class="profile-rel-label">${r.label}</div>
+              <div class="profile-rel-value">${r.icon} ${Utils.esc(r.value)}</div>
+            </div>`).join('')}</div>`
+        : `<div style="color:var(--text-dim);font-size:13px;padding:20px 0;">No linked entities yet.</div>`;
+
+      // Custom fields
+      const cf = c.customFields || {};
+      const cfHtml = Object.keys(cf).length
+        ? `<table class="profile-custom-table">${Object.entries(cf).map(([k,v])=>`<tr><td>${Utils.esc(k)}</td><td>${Utils.esc(String(v))}</td></tr>`).join('')}</table>`
+        : `<div style="color:var(--text-dim);font-size:13px;padding:12px 0;">No custom fields.</div>`;
+
+      // Alternate forms
+      const formsHtml = hasModes
+        ? Object.entries(c.modes).map(([name, data]) => `
+          <div style="padding:14px;background:${data.accent||'#b060ff'}11;border:1px solid ${data.accent||'#b060ff'}33;border-radius:10px;margin-bottom:10px;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+              <div style="width:12px;height:12px;border-radius:50%;background:${data.accent||'#b060ff'};"></div>
+              <div style="font-family:'Orbitron',monospace;font-size:13px;font-weight:700;color:${data.accent||'#b060ff'}">${Utils.esc(name)}</div>
+              <button class="mode-btn${activeMode===name?' active':''}" style="margin-left:auto;padding:4px 12px;font-size:10px;" onclick="VELONIA.Actions.switchMode(${id},'${Utils.esc(name)}')">${activeMode===name?'▶ ACTIVE':'Activate'}</button>
+            </div>
+            <div style="font-size:13px;color:var(--text-secondary);line-height:1.7;">${Utils.esc(data.desc||'')}</div>
+          </div>`).join('')
+        : `<div style="color:var(--text-dim);font-size:13px;padding:12px 0;">No alternate forms defined.</div>`;
+
+      // Bio (mode-specific or base)
+      const bio = modeData.desc || c.bio || '';
+
       content.innerHTML = `
         <button class="profile-close" onclick="VELONIA.Actions.closeProfile()">✕</button>
+
+        <!-- HERO -->
         <div class="profile-hero">
           ${heroPart}
+          ${heroNavs}
           <div class="profile-hero-overlay" style="background:linear-gradient(to bottom,transparent 0%,${accent}22 60%,rgba(10,14,46,0.98) 100%)"></div>
           <div class="profile-hero-content">
-            <div class="profile-avatar"><div class="profile-avatar-ph">${Utils.esc(c.emoji)}</div></div>
+            <div class="profile-avatar">
+              ${heroUrl ? `<img src="${Utils.esc(heroUrl)}" alt="${Utils.esc(c.name)}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">` : ''}
+              <div class="profile-avatar-ph" style="${heroUrl?'display:none':''}">${Utils.esc(c.emoji)}</div>
+            </div>
             <div class="profile-header-info">
-              <div class="profile-type-badge">▸ ${Utils.esc((c.type||'').toUpperCase())} · ${Utils.esc(c.company||'')}</div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px;">${catHtml}</div>
               <div class="profile-name" style="color:${accent}">${Utils.esc(c.name)}</div>
               ${c.altName ? `<div class="profile-alt-name">// ${Utils.esc(c.altName)}</div>` : ''}
+              ${companyName ? `<div style="font-size:11px;color:var(--text-secondary);margin-top:4px;letter-spacing:1px;">▸ ${Utils.esc(companyName)}</div>` : ''}
+              ${ownerBadge}
             </div>
-            <div class="profile-mode-toggle">${modeBtns}</div>
+            ${hasModes ? `<div class="profile-mode-toggle">${modeBtns}</div>` : ''}
           </div>
         </div>
-        <div class="profile-body">
-          <div class="profile-stats">
-            <div class="profile-stat-row"><span class="profile-stat-label">Age</span><span class="profile-stat-value">${Utils.esc(String(c.age||''))}</span></div>
-            <div class="profile-stat-row"><span class="profile-stat-label">Nationality</span><span class="profile-stat-value">${Utils.esc(c.nationality||'')}</span></div>
-            <div class="profile-stat-row"><span class="profile-stat-label">Company</span><span class="profile-stat-value" style="color:${accent}">${Utils.esc(c.company||'')}</span></div>
-            <div class="profile-stat-row"><span class="profile-stat-label">Type</span><span class="profile-stat-value">${Utils.esc(c.type||'')}</span></div>
-            ${Object.entries(stats).map(([k,v]) => `
-              <div>
-                <div class="profile-stat-row" style="border:none;padding:0;margin-bottom:4px;">
-                  <span class="profile-stat-label">${Utils.esc(k)}</span>
-                  <span class="profile-stat-value" style="color:${accent}">${v}</span>
-                </div>
-                <div class="profile-bar"><div class="profile-bar-fill" style="width:${v}%;background:linear-gradient(90deg,${accent},${accent}88)"></div></div>
-              </div>`).join('')}
-          </div>
-          <div>
-            <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-secondary);margin-bottom:12px;font-family:'Orbitron',monospace;">PROFILE — ${Utils.esc(activeMode)}</div>
-            <div class="profile-bio">${Utils.esc(desc||c.bio||'')}</div>
-            <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;">
-              ${(c.tags||[]).map(t=>`<span class="char-tag" style="padding:4px 12px;background:${accent}22;border:1px solid ${accent}44;color:${accent}">${Utils.esc(t)}</span>`).join('')}
+
+        <!-- THUMBNAIL STRIP -->
+        ${imgs.length > 1 ? `<div style="padding:10px 24px;background:rgba(5,7,26,0.6);display:flex;gap:6px;">${thumbStrip}</div>` : ''}
+
+        <!-- TABS -->
+        <div class="profile-tabs">
+          <div class="profile-tab active" onclick="VELONIA.CharPage.profileTab(this,'overview')">Overview</div>
+          <div class="profile-tab" onclick="VELONIA.CharPage.profileTab(this,'stats')">Stats</div>
+          ${hasModes ? `<div class="profile-tab" onclick="VELONIA.CharPage.profileTab(this,'forms')">Forms</div>` : ''}
+          <div class="profile-tab" onclick="VELONIA.CharPage.profileTab(this,'relations')">Relations</div>
+          ${Object.keys(cf).length>0 ? `<div class="profile-tab" onclick="VELONIA.CharPage.profileTab(this,'custom')">Details</div>` : ''}
+        </div>
+
+        <!-- TAB: OVERVIEW -->
+        <div class="profile-panel active" id="ptab-overview">
+          <div style="display:grid;grid-template-columns:1fr 2fr;gap:32px;">
+            <div>
+              <div style="font-size:10px;letter-spacing:2px;color:var(--text-secondary);font-family:'Orbitron',monospace;margin-bottom:14px;">PROFILE</div>
+              ${[
+                ['Age', c.age||'—'],
+                ['Birthday', c.birthday||'—'],
+                ['Nationality', c.nationality||'—'],
+                ['Height', c.height ? c.height+'cm' : '—'],
+                ['Status', c.status||'active'],
+              ].map(([k,v])=>`
+                <div class="profile-stat-row">
+                  <span class="profile-stat-label">${k}</span>
+                  <span class="profile-stat-value" style="${k==='Status'?`color:${v==='active'?'var(--neon-cyan)':v==='deceased'?'var(--danger)':'var(--gold)'}`:''}">${Utils.esc(String(v))}</span>
+                </div>`).join('')}
+            </div>
+            <div>
+              <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-secondary);margin-bottom:12px;font-family:'Orbitron',monospace;">BIO ${hasModes?'— '+Utils.esc(activeMode):''}</div>
+              <div class="profile-bio">${Utils.esc(bio)}</div>
+              <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;">
+                ${(c.tags||[]).map(t=>`<span class="char-tag" style="padding:4px 12px;background:${accent}22;border:1px solid ${accent}44;color:${accent}">${Utils.esc(t)}</span>`).join('')}
+              </div>
             </div>
           </div>
-        </div>`;
+        </div>
+
+        <!-- TAB: STATS -->
+        <div class="profile-panel" id="ptab-stats">
+          <div style="font-size:10px;letter-spacing:2px;color:var(--text-secondary);font-family:'Orbitron',monospace;margin-bottom:18px;">
+            STATS${hasModes?' — '+Utils.esc(activeMode):''}
+          </div>
+          <div class="profile-stats-grid">
+            ${Object.keys(stats).length === 0
+              ? `<div style="color:var(--text-dim);font-size:13px;">No stats defined yet.</div>`
+              : Object.entries(stats).map(([k,v])=>`
+              <div class="psg-row">
+                <div class="psg-header">
+                  <span class="psg-key">${Utils.esc(k)}</span>
+                  <span class="psg-val" style="color:${accent}">${v}</span>
+                </div>
+                <div class="psg-bar"><div class="psg-fill" style="width:${Math.min(v,100)}%;background:linear-gradient(90deg,${accent},${accent}88);"></div></div>
+              </div>`).join('')}
+          </div>
+        </div>
+
+        <!-- TAB: FORMS -->
+        ${hasModes ? `<div class="profile-panel" id="ptab-forms">
+          <div style="font-size:10px;letter-spacing:2px;color:var(--text-secondary);font-family:'Orbitron',monospace;margin-bottom:18px;">ALTERNATE FORMS</div>
+          ${formsHtml}
+        </div>` : ''}
+
+        <!-- TAB: RELATIONS -->
+        <div class="profile-panel" id="ptab-relations">
+          <div style="font-size:10px;letter-spacing:2px;color:var(--text-secondary);font-family:'Orbitron',monospace;margin-bottom:14px;">LINKED ENTITIES</div>
+          ${relHtml}
+        </div>
+
+        <!-- TAB: CUSTOM DETAILS -->
+        ${Object.keys(cf).length>0 ? `<div class="profile-panel" id="ptab-custom">
+          <div style="font-size:10px;letter-spacing:2px;color:var(--text-secondary);font-family:'Orbitron',monospace;margin-bottom:14px;">CUSTOM FIELDS</div>
+          ${cfHtml}
+        </div>` : ''}
+      `;
+
       modal.classList.add('open');
+      // Animate stat bars after render
+      setTimeout(() => {
+        content.querySelectorAll('.psg-fill').forEach(el => {
+          const w = el.style.width; el.style.width = '0'; setTimeout(()=>el.style.width=w, 50);
+        });
+      }, 100);
     },
 
     // ── Companies ────────────────────────────────────────
@@ -6653,8 +7126,14 @@ window.VELONIA.App.boot = async function() {
   // Register roadmap route
   window.VELONIA.Router.register('roadmap', () => _renderRoadmap());
 
-  window.VELONIA.CONFIG.APP_VERSION = '4.0.0';
-  console.log('[VELONIA] Data Model v4.0 / Supabase ready ✓');
+  // Register CharPage & re-register characters route
+  window.VELONIA.CharPage = CharPage;
+  window.VELONIA.Router.register('characters', () => CharPage.render());
+  // Update legacy shim
+  window.filterChars = (btn) => CharPage.filter(btn, btn.dataset.filter);
+
+  window.VELONIA.CONFIG.APP_VERSION = '5.0.0';
+  console.log('[VELONIA] v5.0 — Characters page complete ✓');
 };
 
 // Expose v3 shims on window for HTML onclick compatibility
@@ -6672,7 +7151,201 @@ window.VELONIA.FormBuilder   = FormBuilder;
 window.VELONIA.RelationEngine= RelationEngine;
 
 // ─────────────────────────────────────────────────────────────────
-//  ROADMAP RENDERER
+//  CHAR PAGE MODULE v5
+//  Search · Filter · Sort · View toggle · Carousel · Profile tabs
+// ─────────────────────────────────────────────────────────────────
+const CharPage = {
+  _filter:  'all',
+  _search:  '',
+  _sort:    'name',
+  _view:    'grid',
+  _carouselIdx: {},
+  _heroIdx:     {},
+
+  render() {
+    const chars = this._getFiltered();
+    const grid  = document.getElementById('chars-grid');
+    const empty = document.getElementById('chars-empty');
+    const count = document.getElementById('chars-result-count');
+    const badge = document.getElementById('char-count-badge');
+    if (!grid) return;
+    if (badge) badge.textContent = `${window.VELONIA.DAL.chars.all().length} Characters`;
+    if (chars.length === 0) {
+      grid.innerHTML = '';
+      if (empty) empty.style.display = 'block';
+      if (count) count.textContent = '0 results';
+      return;
+    }
+    if (empty) empty.style.display = 'none';
+    if (count) count.textContent = `${chars.length} result${chars.length!==1?'s':''}`;
+    if (this._view === 'list') {
+      grid.className = 'chars-grid list-view';
+      grid.innerHTML = chars.map(c => this._listRow(c)).join('');
+    } else {
+      grid.className = 'chars-grid';
+      grid.innerHTML = chars.map(c => window.VELONIA.Renderer._charCard(c)).join('');
+    }
+  },
+
+  _getFiltered() {
+    let chars = window.VELONIA.DAL.chars.all();
+    const state = window.VELONIA.State.get();
+    if (this._filter !== 'all') {
+      chars = chars.filter(c => {
+        const cats = c.categories && c.categories.length > 0 ? c.categories : [c.type||'human'];
+        return cats.includes(this._filter);
+      });
+    }
+    if (this._search) {
+      const q = this._search.toLowerCase();
+      chars = chars.filter(c => {
+        const company = c.companyId ? (state.companies||[]).find(co=>co.id==c.companyId) : null;
+        return c.name.toLowerCase().includes(q)
+          || (c.altName||'').toLowerCase().includes(q)
+          || (c.bio||'').toLowerCase().includes(q)
+          || (c.tags||[]).some(t=>t.toLowerCase().includes(q))
+          || (c.nationality||'').toLowerCase().includes(q)
+          || (company?.name||'').toLowerCase().includes(q);
+      });
+    }
+    return [...chars].sort((a,b) => {
+      switch(this._sort) {
+        case 'name':     return a.name.localeCompare(b.name);
+        case 'name-desc':return b.name.localeCompare(a.name);
+        case 'type':     return (a.type||'').localeCompare(b.type||'');
+        case 'company':  return (a.company||'').localeCompare(b.company||'');
+        case 'newest':   return (b.id||0)-(a.id||0);
+        default:         return 0;
+      }
+    });
+  },
+
+  _listRow(c) {
+    const state = window.VELONIA.State.get();
+    const cats  = c.categories && c.categories.length > 0 ? c.categories : [c.type||'human'];
+    const catColors = {idol:'#ff2d9b',actor:'#00e5ff',criminal:'#ff3d3d',superhuman:'#b060ff',human:'#4d9fff',producer:'#ffd700',songwriter:'#3ecf8e',other:'#607d8b'};
+    const imgs  = (c.imgUrls && c.imgUrls.length > 0) ? c.imgUrls : (c.imgUrl ? [c.imgUrl] : []);
+    const company = c.companyId ? (state.companies||[]).find(co=>co.id==c.companyId) : null;
+    const companyName = company ? company.name : (c.company||'');
+    const player = c.ownedById ? (state.players||[]).find(p=>p.id==c.ownedById) : null;
+    const statusColors = {active:'#00e5ff',inactive:'#607d8b',missing:'#ffd700',deceased:'#ff3d3d',unknown:'#b060ff'};
+    const esc = window.VELONIA.Utils.esc.bind(window.VELONIA.Utils);
+    return `
+      <div class="char-card" onclick="VELONIA.Actions.openProfile(${c.id})" style="position:relative;border-radius:10px;background:var(--glass);border:1px solid var(--glass-border);display:flex;align-items:center;height:80px;overflow:hidden;transition:all 0.2s;cursor:pointer;" onmouseenter="this.style.borderColor='rgba(176,96,255,0.4)'" onmouseleave="this.style.borderColor='rgba(176,96,255,0.18)'">
+        ${imgs.length>0
+          ?`<img src="${esc(imgs[0])}" style="width:80px;height:80px;object-fit:cover;flex-shrink:0;" onerror="this.style.display='none'">`
+          :`<div style="width:80px;height:80px;display:flex;align-items:center;justify-content:center;font-size:32px;background:linear-gradient(135deg,var(--navy-light),var(--navy-mid));flex-shrink:0;">${esc(c.emoji)}</div>`}
+        <div style="width:4px;height:100%;background:${catColors[cats[0]]||'#607d8b'};flex-shrink:0;"></div>
+        <div style="padding:0 16px;flex:1;min-width:0;">
+          <div style="font-family:'Orbitron',monospace;font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(c.name)}${c.altName?` <span style="font-size:10px;color:var(--neon-purple);font-weight:400;">// ${esc(c.altName)}</span>`:''}</div>
+          <div style="font-size:11px;color:var(--text-secondary);margin-top:2px;">${cats.map(cat=>`<span style="color:${catColors[cat]||'#aaa'}">${cat}</span>`).join(' · ')}${companyName?' · '+esc(companyName):''}</div>
+          <div style="display:flex;gap:4px;margin-top:4px;">${(c.tags||[]).slice(0,4).map(t=>`<span class="char-tag">${esc(t)}</span>`).join('')}</div>
+        </div>
+        <div style="padding:0 16px;text-align:right;flex-shrink:0;">
+          <div style="width:8px;height:8px;border-radius:50%;background:${statusColors[c.status||'active']};margin-left:auto;margin-bottom:6px;" title="${c.status||'active'}"></div>
+          ${player?`<div style="font-size:10px;color:var(--gold);">${esc(player.emoji||'🎮')} ${esc(player.username)}</div>`:''}
+          <div style="display:flex;gap:4px;margin-top:4px;">
+            <button onclick="event.stopPropagation();VELONIA.Actions.openProfile(${c.id})" style="padding:4px 10px;background:rgba(176,96,255,0.15);border:1px solid rgba(176,96,255,0.3);border-radius:4px;color:var(--neon-purple);font-size:10px;cursor:pointer;font-family:'Orbitron',monospace;">VIEW</button>
+            <button onclick="event.stopPropagation();VELONIA.EntityCRUD.openForm('characters',${c.id})" style="padding:4px 10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:4px;color:var(--text-secondary);font-size:10px;cursor:pointer;">EDIT</button>
+          </div>
+        </div>
+      </div>`;
+  },
+
+  filter(btn, cat) {
+    document.querySelectorAll('#char-filters .filter-chip').forEach(c=>c.classList.remove('active'));
+    btn.classList.add('active');
+    this._filter = cat;
+    this.render();
+  },
+
+  search(q) {
+    this._search = q;
+    const clearBtn = document.getElementById('char-search-clear');
+    if (clearBtn) clearBtn.style.display = q ? 'block' : 'none';
+    this.render();
+  },
+
+  clearSearch() {
+    this._search = '';
+    const input = document.getElementById('char-search');
+    if (input) input.value = '';
+    const clearBtn = document.getElementById('char-search-clear');
+    if (clearBtn) clearBtn.style.display = 'none';
+    this.render();
+  },
+
+  sort(val) { this._sort = val; this.render(); },
+
+  setView(view) {
+    this._view = view;
+    document.getElementById('view-grid-btn')?.classList.toggle('active', view==='grid');
+    document.getElementById('view-list-btn')?.classList.toggle('active', view==='list');
+    this.render();
+  },
+
+  carouselGo(charId, idx) {
+    this._carouselIdx[charId] = idx;
+    const track = document.getElementById(`carousel-track-${charId}`);
+    if (track) track.style.transform = `translateX(-${idx*100}%)`;
+    document.querySelectorAll(`#carousel-${charId} .carousel-dot`).forEach((d,i)=>d.classList.toggle('active',i===idx));
+  },
+
+  carouselNext(charId) {
+    const c = window.VELONIA.DAL.chars.byId(charId); if (!c) return;
+    const imgs = (c.imgUrls && c.imgUrls.length>0) ? c.imgUrls : (c.imgUrl?[c.imgUrl]:[]);
+    this.carouselGo(charId, ((this._carouselIdx[charId]||0)+1) % imgs.length);
+  },
+
+  carouselPrev(charId) {
+    const c = window.VELONIA.DAL.chars.byId(charId); if (!c) return;
+    const imgs = (c.imgUrls && c.imgUrls.length>0) ? c.imgUrls : (c.imgUrl?[c.imgUrl]:[]);
+    const cur = this._carouselIdx[charId]||0;
+    this.carouselGo(charId, (cur-1+imgs.length) % imgs.length);
+  },
+
+  heroSwitch(charId, idx) {
+    const c = window.VELONIA.DAL.chars.byId(charId); if (!c) return;
+    c._heroIdx = idx;
+    const hero = document.getElementById('profile-hero-img');
+    const imgs = (c.imgUrls && c.imgUrls.length>0) ? c.imgUrls : (c.imgUrl?[c.imgUrl]:[]);
+    if (hero && imgs[idx]) hero.src = imgs[idx];
+    document.querySelectorAll('#profile-thumbs .profile-thumb').forEach((t,i)=>t.classList.toggle('active',i===idx));
+    this._heroIdx[charId] = idx;
+  },
+
+  heroNext(charId) {
+    const c = window.VELONIA.DAL.chars.byId(charId); if (!c) return;
+    const imgs = (c.imgUrls && c.imgUrls.length>0) ? c.imgUrls : (c.imgUrl?[c.imgUrl]:[]);
+    this.heroSwitch(charId, ((this._heroIdx[charId]||0)+1) % imgs.length);
+  },
+
+  heroPrev(charId) {
+    const c = window.VELONIA.DAL.chars.byId(charId); if (!c) return;
+    const imgs = (c.imgUrls && c.imgUrls.length>0) ? c.imgUrls : (c.imgUrl?[c.imgUrl]:[]);
+    const cur = this._heroIdx[charId]||0;
+    this.heroSwitch(charId, (cur-1+imgs.length) % imgs.length);
+  },
+
+  profileTab(btn, tabId) {
+    const modal = document.getElementById('profile-modal-content');
+    if (!modal) return;
+    modal.querySelectorAll('.profile-tab').forEach(t=>t.classList.remove('active'));
+    modal.querySelectorAll('.profile-panel').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    const panel = modal.querySelector(`#ptab-${tabId}`);
+    if (panel) {
+      panel.classList.add('active');
+      if (tabId==='stats') {
+        panel.querySelectorAll('.psg-fill').forEach(el=>{
+          const w=el.style.width; el.style.width='0'; setTimeout(()=>el.style.width=w,50);
+        });
+      }
+    }
+  }
+};
+
+window.VELONIA.CharPage = CharPage;
 //  Tam geliştirme planı — sekme sekme, öncelik sırasıyla
 // ─────────────────────────────────────────────────────────────────
 
