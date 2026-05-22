@@ -7382,23 +7382,28 @@ const ROADMAP_DATA = [
     ]
   },
   {
-    phase: 3, title: 'CHARACTERS — Tam İşlevsel Sayfa', sub: 'SIRADAM — Sonraki geliştirme', color: '#b060ff',
-    status: 'active',
+    phase: 3, title: 'CHARACTERS — Tam İşlevsel Sayfa', sub: 'Tamamlandı — v5 + v6', color: '#b060ff',
+    status: 'done',
     items: [
-      { icon:'🔨', title:'Character Card — Multi-kategori badge',desc:'categories[] dizisini göster, tek type değil',      status:'active-dev' },
-      { icon:'🔨', title:'Character Card — Multiple images (carousel)', desc:'imgUrls[] ile slide/swipe, thumbnail row',   status:'active-dev' },
-      { icon:'🔨', title:'Character Profile Modal — Tam Yenileme', desc:'Alternate forms, custom fields, relation summary, owned-by player', status:'active-dev' },
-      { icon:'📋', title:'Character — Stats Editor (in-profile)',  desc:'Profile\'dan direkt stat düzenleme, sliderlar',    status:'planned' },
-      { icon:'📋', title:'Character — Alternate Forms Switcher',   desc:'Form tab\'ları: SOYEON / NYX toggle + farklı stats', status:'planned' },
-      { icon:'📋', title:'Character — Relation Summary Panel',     desc:'Company, Group, Albums, Dramas, Social Accounts bağlantıları', status:'planned' },
-      { icon:'📋', title:'Character — Player Ownership Badge',     desc:'Hangi player\'ın karakteri, ownership transferi',  status:'planned' },
-      { icon:'📋', title:'Character Search + Advanced Filter',     desc:'İsim, type, company, tag, player filtresi + arama kutusu', status:'planned' },
-      { icon:'📋', title:'Character Detail Sayfası (full page)',   desc:'Modal değil, /characters/ID tam sayfa görünümü',  status:'planned' },
+      { icon:'✅', title:'Character Card — Multi-kategori badge',        desc:'categories[] dizisinden renk kodlu badge\'ler, her kategorinin rengi farklı',   status:'done' },
+      { icon:'✅', title:'Character Card — Image Carousel (20s slideshow)',desc:'imgUrls[] ile otomatik slideshow, ‹ › okları, dots navigasyon, 20sn interval', status:'done' },
+      { icon:'✅', title:'Character Card — Status Dot',                  desc:'Active/inactive/missing/deceased/unknown renk kodlu durum göstergesi',           status:'done' },
+      { icon:'✅', title:'Character — Banner + Gallery Sistemi',          desc:'bannerUrl ayrı hero arka planı, imgUrls[] galeri, ⭐ primary seçimi',           status:'done' },
+      { icon:'✅', title:'Character Profile Modal — 5 Tab Sistemi',       desc:'Overview · Stats · Forms · Relations · Custom Details tab\'ları',              status:'done' },
+      { icon:'✅', title:'Character — Alternate Forms Switcher',          desc:'Forms tab\'ı: her form için activate butonu, accent rengi, desc, stats override', status:'done' },
+      { icon:'✅', title:'Character — Animated Stats Bars',              desc:'Tab geçişinde animate olan gradient bar\'lar, mode-specific override',           status:'done' },
+      { icon:'✅', title:'Character — Relation Summary Panel',            desc:'Company, Group, Album, Drama, Social Account — tıklanabilir ilgili sayfaya git', status:'done' },
+      { icon:'✅', title:'Character — Player Ownership Badge',            desc:'Profil hero\'da altın badge: hangi player\'ın karakteri',                      status:'done' },
+      { icon:'✅', title:'Character Search + Filter + Sort',             desc:'Canlı arama, 8 kategori chip, 5 sıralama seçeneği, sonuç sayacı',               status:'done' },
+      { icon:'✅', title:'Character Grid + List View Toggle',            desc:'Grid ve liste görünümü arasında geçiş, list\'te EDIT butonu',                   status:'done' },
+      { icon:'✅', title:'Character — Custom Fields Tab',                 desc:'Admin\'den eklenen key-value alanlar profilde tablo olarak görünür',            status:'done' },
+      { icon:'✅', title:'Admin Form — FormBuilder ile tam yenileme',     desc:'Tüm eski hardcoded formlar silindi, EntityCRUD + FormBuilder kullanılıyor',    status:'done' },
+      { icon:'⏭', title:'Stats Editor (in-profile sliderlar)',           desc:'Admin\'den zaten düzenlenebiliyor. İleride profile\'dan inline edit eklenebilir', status:'skipped' },
     ]
   },
   {
-    phase: 4, title: 'COMPANIES & GROUPS', sub: 'Phase 3 bittikten sonra', color: '#00e5ff',
-    status: 'planned',
+    phase: 4, title: 'COMPANIES & GROUPS', sub: 'SIRADAM — Sonraki geliştirme', color: '#00e5ff',
+    status: 'active',
     items: [
       { icon:'📋', title:'Company Detail Modal',               desc:'Üyeler grid, bağlı albumler, dramalar, event\'ler',   status:'planned' },
       { icon:'📋', title:'Company — Power/Reputation Bar',     desc:'Görsel rep-bar, status badge, kuruluş tarihi',        status:'planned' },
@@ -7493,14 +7498,15 @@ function _renderRoadmap() {
   if (!el) return;
 
   const statusColors = {
-    done:       { bg:'rgba(0,229,255,0.08)', border:'rgba(0,229,255,0.25)', badge:'var(--neon-cyan)',   label:'✅ DONE'       },
-    'active-dev':{ bg:'rgba(176,96,255,0.1)',border:'rgba(176,96,255,0.4)', badge:'var(--neon-purple)', label:'🔨 IN DEV'     },
-    planned:    { bg:'rgba(255,255,255,0.03)',border:'rgba(255,255,255,0.08)',badge:'var(--text-dim)',   label:'📋 PLANNED'    },
-    ongoing:    { bg:'rgba(255,215,0,0.06)', border:'rgba(255,215,0,0.2)',   badge:'var(--gold)',       label:'🔄 ONGOING'    },
+    done:        { bg:'rgba(0,229,255,0.08)',  border:'rgba(0,229,255,0.25)',   badge:'var(--neon-cyan)',    label:'✅ DONE'      },
+    'active-dev':{ bg:'rgba(176,96,255,0.1)', border:'rgba(176,96,255,0.4)',   badge:'var(--neon-purple)',  label:'🔨 IN DEV'    },
+    planned:     { bg:'rgba(255,255,255,0.03)',border:'rgba(255,255,255,0.08)', badge:'var(--text-dim)',     label:'📋 PLANNED'   },
+    ongoing:     { bg:'rgba(255,215,0,0.06)', border:'rgba(255,215,0,0.2)',    badge:'var(--gold)',         label:'🔄 ONGOING'   },
+    skipped:     { bg:'rgba(255,255,255,0.02)',border:'rgba(255,255,255,0.05)', badge:'var(--text-dim)',     label:'⏭ DEFERRED'  },
   };
 
   // Summary banner
-  const total   = ROADMAP_DATA.reduce((s, p) => s + p.items.length, 0);
+  const total   = ROADMAP_DATA.reduce((s, p) => s + p.items.filter(i=>i.status!=='skipped').length, 0);
   const done    = ROADMAP_DATA.reduce((s, p) => s + p.items.filter(i=>i.status==='done').length, 0);
   const inDev   = ROADMAP_DATA.reduce((s, p) => s + p.items.filter(i=>i.status==='active-dev').length, 0);
   const pct     = Math.round(done / total * 100);
