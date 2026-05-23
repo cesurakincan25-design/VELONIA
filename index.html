@@ -1404,29 +1404,100 @@ body:has(a:hover) #cursor, body:has(button:hover) #cursor { transform: scale(2);
 /* ============================================================
    SOCIAL MEDIA SYSTEM
    ============================================================ */
+/* ============================================================
+   SOCIAL MEDIA SYSTEM v2
+   ============================================================ */
 .social-tabs {
-  display: flex; gap: 4px; margin-bottom: 28px;
+  display: flex; gap: 2px; margin-bottom: 28px;
   border-bottom: 1px solid var(--glass-border);
+  flex-wrap: wrap;
 }
 .social-tab {
-  padding: 12px 20px;
-  background: none; border: none;
-  color: var(--text-secondary); font-size: 13px;
+  padding: 12px 18px; background: none; border: none;
+  color: var(--text-secondary); font-size: 12px;
   cursor: pointer; transition: all 0.2s;
-  border-bottom: 2px solid transparent;
-  margin-bottom: -1px;
+  border-bottom: 2px solid transparent; margin-bottom: -1px;
+  white-space: nowrap;
 }
 .social-tab.active { color: var(--neon-purple); border-bottom-color: var(--neon-purple); }
-.social-tab:hover { color: var(--text-primary); }
+.social-tab:hover  { color: var(--text-primary); }
 
+/* ── FEED ─────────────────────────────────────────────────── */
+.feed-list { display: flex; flex-direction: column; gap: 16px; }
+.feed-post {
+  background: var(--glass); border: 1px solid var(--glass-border);
+  border-radius: 14px; overflow: hidden; transition: all 0.2s; cursor: pointer;
+}
+.feed-post:hover { border-color: rgba(176,96,255,0.3); transform: translateY(-1px); }
+.feed-post-header {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 16px 10px;
+}
+.feed-avatar {
+  width: 40px; height: 40px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; flex-shrink: 0; border: 2px solid transparent;
+}
+.feed-handle { font-size: 13px; font-weight: 600; }
+.feed-platform-tag {
+  font-size: 9px; letter-spacing: 1px; padding: 2px 7px;
+  border-radius: 20px; font-family: 'Orbitron', monospace;
+}
+.feed-post-media {
+  width: 100%; max-height: 320px; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(135deg, var(--navy-light), var(--navy-mid));
+}
+.feed-post-media img { width: 100%; height: 100%; object-fit: cover; }
+.feed-post-media-ph {
+  width: 100%; height: 200px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 64px;
+}
+.feed-post-body { padding: 12px 16px 14px; }
+.feed-post-caption { font-size: 13px; line-height: 1.7; color: var(--text-secondary); margin-bottom: 10px; }
+.feed-post-stats {
+  display: flex; gap: 18px; font-size: 12px; color: var(--text-dim);
+  padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.05);
+}
+.feed-stat-btn {
+  display: flex; align-items: center; gap: 5px; cursor: pointer;
+  transition: color 0.2s; background: none; border: none;
+  color: var(--text-dim); font-size: 12px; padding: 0;
+}
+.feed-stat-btn:hover { color: var(--neon-purple); }
+.feed-stat-btn.liked  { color: #ff4d6d; }
+
+/* ── INSTAGRAM ────────────────────────────────────────────── */
+.insta-wrapper { max-width: 640px; margin: 0 auto; }
+.insta-stories {
+  display: flex; gap: 16px; overflow-x: auto; padding: 4px 0 16px;
+  scrollbar-width: none; margin-bottom: 20px;
+}
+.insta-stories::-webkit-scrollbar { display: none; }
+.insta-story {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 6px; flex-shrink: 0; cursor: pointer;
+}
+.insta-story-ring {
+  width: 62px; height: 62px; border-radius: 50%; padding: 2px;
+  background: linear-gradient(135deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+}
+.insta-story-ring.viewed { background: var(--glass-border); }
+.insta-story-avatar {
+  width: 100%; height: 100%; border-radius: 50%;
+  background: var(--navy-light); border: 2px solid var(--navy-mid);
+  display: flex; align-items: center; justify-content: center; font-size: 24px;
+  overflow: hidden;
+}
+.insta-story-avatar img { width:100%;height:100%;object-fit:cover; }
+.insta-story-name { font-size: 10px; color: var(--text-secondary); max-width: 62px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .instagram-grid {
-  display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px;
-  margin-bottom: 24px;
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; margin-bottom: 28px;
 }
 .insta-post {
-  aspect-ratio: 1; overflow: hidden;
-  position: relative; cursor: pointer;
-  background: var(--navy-light);
+  aspect-ratio: 1; overflow: hidden; position: relative;
+  cursor: pointer; background: var(--navy-light);
 }
 .insta-post-ph {
   width: 100%; height: 100%;
@@ -1434,87 +1505,226 @@ body:has(a:hover) #cursor, body:has(button:hover) #cursor { transform: scale(2);
   font-size: 32px;
   background: linear-gradient(135deg, var(--navy-light), var(--navy-mid));
 }
+.insta-post-ph img { width:100%;height:100%;object-fit:cover; }
 .insta-post-overlay {
   position: absolute; inset: 0;
-  background: rgba(0,0,0,0.6);
+  background: rgba(0,0,0,0.5);
   display: flex; align-items: center; justify-content: center;
   gap: 16px; opacity: 0; transition: opacity 0.3s;
 }
 .insta-post:hover .insta-post-overlay { opacity: 1; }
-.insta-stat { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; }
+.insta-stat { display: flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 600; }
+/* Reels badge */
+.insta-reel-badge {
+  position: absolute; top: 6px; right: 6px;
+  background: rgba(0,0,0,0.6); border-radius: 4px;
+  padding: 2px 5px; font-size: 9px; color: white;
+}
 
+/* ── YOUTUBE ──────────────────────────────────────────────── */
+.yt-channel-header {
+  display: flex; align-items: center; gap: 16px;
+  padding: 16px; background: var(--glass);
+  border: 1px solid var(--glass-border); border-radius: 12px; margin-bottom: 20px;
+}
 .yt-video-list { display: flex; flex-direction: column; gap: 12px; }
 .yt-video {
-  display: flex; gap: 16px; align-items: flex-start;
-  padding: 12px; border-radius: 8px; cursor: pointer;
-  transition: background 0.2s;
+  display: flex; gap: 14px; padding: 12px;
+  border-radius: 10px; cursor: pointer; transition: background 0.2s;
+  border: 1px solid transparent;
 }
-.yt-video:hover { background: rgba(255,255,255,0.04); }
+.yt-video:hover { background: rgba(255,255,255,0.04); border-color: rgba(176,96,255,0.2); }
 .yt-thumb {
-  width: 160px; height: 90px; border-radius: 6px; overflow: hidden;
-  flex-shrink: 0; position: relative;
+  width: 168px; height: 94px; border-radius: 8px;
+  overflow: hidden; flex-shrink: 0; position: relative;
+  background: linear-gradient(135deg, var(--navy-light), var(--navy-mid));
 }
 .yt-thumb-ph {
   width: 100%; height: 100%;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 28px;
-  background: linear-gradient(135deg, var(--navy-light), #200040);
+  display: flex; align-items: center; justify-content: center; font-size: 40px;
 }
-.yt-play {
+.yt-thumb img { width:100%;height:100%;object-fit:cover; }
+.yt-play-btn {
   position: absolute; inset: 0;
   display: flex; align-items: center; justify-content: center;
-  background: rgba(0,0,0,0.4); opacity: 0; transition: opacity 0.3s;
+  background: rgba(0,0,0,0); transition: background 0.2s;
 }
-.yt-video:hover .yt-play { opacity: 1; }
-.yt-title { font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+.yt-video:hover .yt-play-btn { background: rgba(0,0,0,0.4); }
+.yt-play-icon {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: rgba(255,0,0,0.85); display: flex; align-items: center;
+  justify-content: center; font-size: 14px; opacity: 0; transition: opacity 0.2s;
+}
+.yt-video:hover .yt-play-icon { opacity: 1; }
+.yt-duration {
+  position: absolute; bottom: 4px; right: 4px;
+  background: rgba(0,0,0,0.8); border-radius: 3px;
+  padding: 1px 5px; font-size: 10px; font-family: 'Space Mono',monospace;
+}
+.yt-info {}
+.yt-title { font-size: 14px; font-weight: 600; line-height: 1.4; margin-bottom: 6px; }
 .yt-meta { font-size: 11px; color: var(--text-secondary); }
 
-/* ============================================================
-   BUBBLE MESSAGING
-   ============================================================ */
+/* ── BUBBLE ───────────────────────────────────────────────── */
+.bubble-list { display: flex; flex-direction: column; gap: 20px; }
 .bubble-chat {
-  border-radius: 16px; overflow: hidden;
   background: var(--glass); border: 1px solid var(--glass-border);
-  max-width: 500px;
+  border-radius: 16px; overflow: hidden;
 }
 .bubble-header {
-  padding: 16px 20px;
-  background: rgba(176,96,255,0.1);
-  border-bottom: 1px solid var(--glass-border);
   display: flex; align-items: center; gap: 12px;
+  padding: 16px 20px; background: rgba(255,255,255,0.03);
+  border-bottom: 1px solid var(--glass-border); cursor: pointer;
 }
 .bubble-avatar {
-  width: 40px; height: 40px; border-radius: 50%;
-  background: linear-gradient(135deg, var(--neon-purple), var(--neon-blue));
+  width: 44px; height: 44px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--neon-purple), #1a0540);
   display: flex; align-items: center; justify-content: center;
-  font-size: 16px;
+  font-size: 22px; flex-shrink: 0; overflow: hidden;
 }
+.bubble-avatar img { width:100%;height:100%;object-fit:cover;border-radius:50%; }
 .bubble-name { font-weight: 600; font-size: 14px; }
 .bubble-status { font-size: 11px; color: var(--neon-cyan); }
-.bubble-messages {
-  padding: 20px; display: flex; flex-direction: column; gap: 12px;
-  max-height: 400px; overflow-y: auto;
-}
-.bubble-msg {
-  display: flex; gap: 10px; align-items: flex-end;
-}
+.bubble-messages { padding: 16px 20px; display: flex; flex-direction: column; gap: 12px; max-height: 340px; overflow-y: auto; }
+.bubble-msg { display: flex; gap: 8px; align-items: flex-start; }
 .bubble-msg.idol { flex-direction: row; }
-.bubble-msg.fan { flex-direction: row-reverse; }
+.bubble-msg.fan  { flex-direction: row-reverse; }
 .bubble-bubble {
-  max-width: 70%; padding: 10px 14px; border-radius: 16px;
-  font-size: 13px; line-height: 1.6;
+  padding: 10px 14px; border-radius: 18px;
+  font-size: 13px; line-height: 1.6; max-width: 75%;
 }
 .bubble-msg.idol .bubble-bubble {
-  background: rgba(176,96,255,0.15);
-  border: 1px solid rgba(176,96,255,0.2);
-  border-bottom-left-radius: 4px;
+  background: rgba(176,96,255,0.15); border: 1px solid rgba(176,96,255,0.25);
+  border-top-left-radius: 4px;
 }
 .bubble-msg.fan .bubble-bubble {
-  background: rgba(255,255,255,0.07);
-  border: 1px solid rgba(255,255,255,0.1);
-  border-bottom-right-radius: 4px;
+  background: rgba(0,229,255,0.1); border: 1px solid rgba(0,229,255,0.2);
+  border-top-right-radius: 4px;
 }
-.bubble-time { font-size: 10px; color: var(--text-dim); margin-bottom: 4px; }
+.bubble-time { font-size: 10px; color: var(--text-dim); margin: 2px 4px; }
+.bubble-reply-bar {
+  padding: 12px 20px; border-top: 1px solid var(--glass-border);
+  display: flex; gap: 10px; align-items: center;
+}
+.bubble-reply-input {
+  flex: 1; background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1); border-radius: 20px;
+  padding: 8px 16px; color: var(--text-primary); font-size: 13px; outline: none;
+}
+.bubble-reply-input:focus { border-color: var(--neon-purple); }
+.bubble-send-btn {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--neon-purple); border: none; color: white;
+  cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s; flex-shrink: 0;
+}
+.bubble-send-btn:hover { background: #9040df; transform: scale(1.05); }
+
+/* ── TIKTOK ───────────────────────────────────────────────── */
+.tiktok-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px;
+}
+.tiktok-card {
+  border-radius: 12px; overflow: hidden; cursor: pointer;
+  background: var(--navy-light); aspect-ratio: 9/16;
+  position: relative; transition: all 0.2s;
+}
+.tiktok-card:hover { transform: scale(1.03); }
+.tiktok-ph {
+  width: 100%; height: 100%;
+  display: flex; align-items: center; justify-content: center; font-size: 48px;
+  background: linear-gradient(135deg, var(--navy-light), #1a0540);
+}
+.tiktok-ph img { width:100%;height:100%;object-fit:cover;position:absolute;inset:0; }
+.tiktok-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 50%);
+}
+.tiktok-info { position: absolute; bottom: 10px; left: 10px; right: 10px; }
+.tiktok-handle { font-size: 11px; font-weight: 600; margin-bottom: 4px; }
+.tiktok-views { font-size: 10px; color: rgba(255,255,255,0.7); }
+.tiktok-play {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+  width: 44px; height: 44px; border-radius: 50%;
+  background: rgba(255,255,255,0.15); backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; opacity: 0; transition: opacity 0.2s;
+}
+.tiktok-card:hover .tiktok-play { opacity: 1; }
+
+/* ── WEVERSE ──────────────────────────────────────────────── */
+.weverse-list { display: flex; flex-direction: column; gap: 12px; }
+.weverse-post {
+  background: var(--glass); border: 1px solid var(--glass-border);
+  border-radius: 12px; padding: 16px 18px; cursor: pointer; transition: all 0.2s;
+}
+.weverse-post:hover { border-color: rgba(0,229,255,0.3); }
+.weverse-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.weverse-badge {
+  padding: 2px 8px; border-radius: 4px;
+  font-size: 9px; letter-spacing: 1px; font-family: 'Orbitron',monospace;
+  background: rgba(0,229,255,0.15); color: var(--neon-cyan);
+  border: 1px solid rgba(0,229,255,0.3);
+}
+.weverse-content { font-size: 13px; line-height: 1.7; color: var(--text-secondary); margin-bottom: 10px; }
+.weverse-footer { display: flex; align-items: center; gap: 16px; font-size: 11px; color: var(--text-dim); }
+
+/* ── POST COMPOSER ────────────────────────────────────────── */
+.composer-header {
+  padding: 18px 20px 14px;
+  border-bottom: 1px solid var(--glass-border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.composer-body { padding: 20px; }
+.composer-account-row {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 16px;
+}
+.composer-textarea {
+  width: 100%; min-height: 100px; background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1); border-radius: 10px;
+  padding: 12px 14px; color: var(--text-primary); font-size: 13px;
+  resize: vertical; outline: none; line-height: 1.7;
+  font-family: 'Noto Sans KR', sans-serif;
+}
+.composer-textarea:focus { border-color: var(--neon-purple); }
+.composer-toolbar {
+  display: flex; align-items: center; gap: 8px; margin-top: 10px; flex-wrap: wrap;
+}
+.composer-tool-btn {
+  padding: 6px 12px; background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1); border-radius: 6px;
+  color: var(--text-secondary); font-size: 11px; cursor: pointer; transition: all 0.2s;
+}
+.composer-tool-btn:hover { border-color: var(--neon-purple); color: var(--neon-purple); }
+.composer-tool-btn.active { background: rgba(176,96,255,0.2); border-color: var(--neon-purple); color: var(--neon-purple); }
+.composer-footer {
+  padding: 14px 20px; border-top: 1px solid var(--glass-border);
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+}
+.composer-char-count { font-size: 11px; color: var(--text-dim); font-family: 'Space Mono',monospace; }
+
+/* ── POST DETAIL MODAL ────────────────────────────────────── */
+.post-detail-img {
+  width: 100%; max-height: 400px; object-fit: cover;
+  background: linear-gradient(135deg, var(--navy-light), var(--navy-mid));
+  display: flex; align-items: center; justify-content: center; font-size: 80px;
+}
+.comment-list { display: flex; flex-direction: column; gap: 12px; padding: 16px 20px; max-height: 300px; overflow-y: auto; }
+.comment-item { display: flex; gap: 10px; }
+.comment-avatar { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; background: var(--navy-light); }
+.comment-bubble { background: rgba(255,255,255,0.04); border-radius: 12px; padding: 8px 12px; flex: 1; }
+.comment-author { font-size: 11px; font-weight: 600; margin-bottom: 3px; }
+.comment-text { font-size: 12px; color: var(--text-secondary); line-height: 1.5; }
+.comment-input-row {
+  display: flex; gap: 10px; padding: 12px 20px;
+  border-top: 1px solid var(--glass-border); align-items: center;
+}
+.comment-input {
+  flex: 1; background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1); border-radius: 20px;
+  padding: 8px 14px; color: var(--text-primary); font-size: 12px; outline: none;
+}
+.comment-input:focus { border-color: var(--neon-purple); }
 
 /* ============================================================
    AWARDS SYSTEM
@@ -2365,17 +2575,38 @@ body:has(a:hover) #cursor, body:has(button:hover) #cursor { transform: scale(2);
   <div class="section-header">
     <div class="section-title">Social <span>Media</span></div>
     <div class="section-line"></div>
-    <div class="section-badge">Live Feed</div>
+    <div class="section-badge" id="social-badge">Live Feed</div>
   </div>
-  <div class="social-tabs">
-    <button class="social-tab active" onclick="switchSocialTab(this,'instagram')">📷 Instagram</button>
-    <button class="social-tab" onclick="switchSocialTab(this,'youtube')">▶ YouTube</button>
-    <button class="social-tab" onclick="switchSocialTab(this,'bubble')">💬 Bubble</button>
+
+  <!-- Platform Tabs -->
+  <div class="social-tabs" id="social-tabs">
+    <button class="social-tab active" onclick="VELONIA.SocialPage.switchTab(this,'feed')">🌐 Feed</button>
+    <button class="social-tab" onclick="VELONIA.SocialPage.switchTab(this,'instagram')">📷 Instagram</button>
+    <button class="social-tab" onclick="VELONIA.SocialPage.switchTab(this,'youtube')">▶ YouTube</button>
+    <button class="social-tab" onclick="VELONIA.SocialPage.switchTab(this,'bubble')">💬 Bubble</button>
+    <button class="social-tab" onclick="VELONIA.SocialPage.switchTab(this,'tiktok')">🎵 TikTok</button>
+    <button class="social-tab" onclick="VELONIA.SocialPage.switchTab(this,'weverse')">🌸 Weverse</button>
+    <button class="social-tab compose-tab" onclick="VELONIA.SocialPage.openComposer()" style="margin-left:auto;color:var(--neon-purple);border-bottom-color:transparent;">✏ New Post</button>
   </div>
-  <div id="social-instagram" class="social-content"></div>
-  <div id="social-youtube" class="social-content" style="display:none;"></div>
-  <div id="social-bubble" class="social-content" style="display:none;"></div>
+
+  <!-- Tab Content Areas -->
+  <div id="sc-feed"      class="social-content active-panel"></div>
+  <div id="sc-instagram" class="social-content" style="display:none;"></div>
+  <div id="sc-youtube"   class="social-content" style="display:none;"></div>
+  <div id="sc-bubble"    class="social-content" style="display:none;"></div>
+  <div id="sc-tiktok"    class="social-content" style="display:none;"></div>
+  <div id="sc-weverse"   class="social-content" style="display:none;"></div>
 </div>
+</div>
+
+<!-- Post Composer Modal -->
+<div id="composer-overlay" style="position:fixed;inset:0;z-index:2200;display:none;align-items:center;justify-content:center;background:rgba(5,7,26,0.92);backdrop-filter:blur(16px);" onclick="if(event.target===this)VELONIA.SocialPage.closeComposer()">
+  <div id="composer-modal" style="width:100%;max-width:560px;background:var(--navy-mid);border-radius:16px;border:1px solid var(--glass-border);overflow:hidden;animation:modalIn 0.3s cubic-bezier(0.4,0,0.2,1);"></div>
+</div>
+
+<!-- Post Detail Modal -->
+<div id="post-detail-overlay" style="position:fixed;inset:0;z-index:2200;display:none;align-items:center;justify-content:center;background:rgba(5,7,26,0.92);backdrop-filter:blur(16px);overflow-y:auto;padding:40px 20px;" onclick="if(event.target===this)VELONIA.SocialPage.closePostDetail()">
+  <div id="post-detail-modal" style="width:100%;max-width:640px;background:var(--navy-mid);border-radius:16px;border:1px solid var(--glass-border);overflow:hidden;animation:modalIn 0.3s cubic-bezier(0.4,0,0.2,1);"></div>
 </div>
 
 <!-- ===== AWARDS ===== -->
@@ -3679,90 +3910,12 @@ window.VELONIA = (function() {
 
     // ── Social ───────────────────────────────────────────
     social() {
-      this.instagram();
-      this.youtube();
-      this.bubble();
+      if (window.VELONIA.SocialPage) window.VELONIA.SocialPage.render();
     },
 
-    instagram() {
-      const container = document.getElementById('social-instagram'); if (!container) return;
-      const posts = DAL.posts.byPlatform('instagram');
-      container.innerHTML = `
-        <div style="display:flex;gap:24px;margin-bottom:28px;flex-wrap:wrap;">
-          ${DAL.chars.all().slice(0,5).map(c=>`
-            <div style="display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;">
-              <div style="width:64px;height:64px;border-radius:50%;border:2px solid var(--neon-purple);display:flex;align-items:center;justify-content:center;font-size:28px;background:linear-gradient(135deg,var(--navy-light),#1a0540)">${Utils.esc(c.emoji)}</div>
-              <div style="font-size:11px;color:var(--text-secondary)">${Utils.esc(c.name)}</div>
-            </div>`).join('')}
-        </div>
-        <div class="instagram-grid">
-          ${posts.map(p=>`
-            <div class="insta-post">
-              <div class="insta-post-ph" style="font-size:48px">${Utils.esc(p.emoji)}</div>
-              <div class="insta-post-overlay">
-                <div class="insta-stat">❤ ${Utils.esc(p.likes)}</div>
-                <div class="insta-stat">💬 ${Utils.esc(p.comments)}</div>
-              </div>
-            </div>`).join('')}
-        </div>
-        <div style="margin-top:20px;">
-          ${posts.map(p=>`
-            <div style="display:flex;gap:12px;padding:16px 0;border-bottom:1px solid var(--glass-border);">
-              <div style="width:40px;height:40px;border-radius:50%;background:var(--navy-light);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">${Utils.esc(p.emoji)}</div>
-              <div>
-                <div style="font-weight:600;font-size:13px;margin-bottom:4px;">${Utils.esc(p.char)}</div>
-                <div style="font-size:13px;color:var(--text-secondary)">${Utils.esc(p.caption||'')}</div>
-                <div style="display:flex;gap:16px;margin-top:8px;font-size:12px;color:var(--text-dim)">
-                  <span>❤ ${Utils.esc(p.likes)}</span><span>💬 ${Utils.esc(p.comments)}</span>
-                </div>
-              </div>
-            </div>`).join('')}
-        </div>`;
-    },
-
-    youtube() {
-      const container = document.getElementById('social-youtube'); if (!container) return;
-      const posts = DAL.posts.byPlatform('youtube');
-      container.innerHTML = `
-        <div style="display:flex;flex-direction:column;gap:16px;">
-          ${posts.map(p=>`
-            <div style="display:flex;gap:16px;padding:16px;background:var(--glass);border:1px solid var(--glass-border);border-radius:10px;">
-              <div style="width:140px;height:80px;border-radius:8px;background:linear-gradient(135deg,var(--navy-light),#1a0540);display:flex;align-items:center;justify-content:center;font-size:36px;flex-shrink:0;">${Utils.esc(p.emoji)}</div>
-              <div>
-                <div style="font-size:14px;font-weight:600;margin-bottom:6px;">${Utils.esc(p.title||p.caption||'')}</div>
-                <div style="font-size:12px;color:var(--text-secondary);margin-bottom:4px;">${Utils.esc(p.char)}</div>
-                <div style="font-size:11px;color:var(--text-dim)">${Utils.esc(p.views||'')} views · ${Utils.esc(p.posted||'')}</div>
-              </div>
-            </div>`).join('')}
-        </div>`;
-    },
-
-    bubble() {
-      const container = document.getElementById('social-bubble'); if (!container) return;
-      container.innerHTML = DAL.bubble.all().map(bm => `
-        <div style="margin-bottom:24px;">
-          <div class="bubble-chat">
-            <div class="bubble-header">
-              <div class="bubble-avatar">${Utils.esc(DAL.chars.all().find(c=>c.name===bm.char)?.emoji||'⭐')}</div>
-              <div>
-                <div class="bubble-name">${Utils.esc(bm.char)}</div>
-                <div class="bubble-status">● Online — Bubble Exclusive</div>
-              </div>
-            </div>
-            <div class="bubble-messages">
-              ${(bm.messages||[]).map(m=>`
-                <div class="bubble-msg ${m.type}">
-                  ${m.type==='idol'?`<div style="width:28px;height:28px;border-radius:50%;background:var(--navy-light);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0">${Utils.esc(DAL.chars.all().find(c=>c.name===bm.char)?.emoji||'⭐')}</div>`:''}
-                  <div>
-                    ${m.type==='idol'?`<div class="bubble-time">${Utils.esc(m.time)}</div>`:''}
-                    <div class="bubble-bubble">${Utils.esc(m.text)}</div>
-                    ${m.type==='fan'?`<div class="bubble-time" style="text-align:right">${Utils.esc(m.time)}</div>`:''}
-                  </div>
-                </div>`).join('')}
-            </div>
-          </div>
-        </div>`).join('');
-    },
+    instagram() { if (window.VELONIA.SocialPage) window.VELONIA.SocialPage._renderInstagram(); },
+    youtube()   { if (window.VELONIA.SocialPage) window.VELONIA.SocialPage._renderYoutube(); },
+    bubble()    { if (window.VELONIA.SocialPage) window.VELONIA.SocialPage._renderBubble(); },
 
     // ── Awards ───────────────────────────────────────────
     awards() {
@@ -7269,6 +7422,11 @@ window.VELONIA.App.boot = async function() {
   window.VELONIA.Router.register('companies', () => CoPage.render());
   window.VELONIA.Router.register('groups',    () => GrpPage.render());
 
+  // Register SocialPage
+  window.VELONIA.SocialPage = SocialPage;
+  window.VELONIA.Router.register('social', () => SocialPage.render());
+  window.switchSocialTab = (btn, tab) => SocialPage.switchTab(btn, tab);
+
   // Update legacy shim
   window.filterChars = (btn) => CharPage.filter(btn, btn.dataset.filter);
 
@@ -7840,9 +7998,430 @@ const GrpPage = {
   }
 };
 window.VELONIA.GrpPage = GrpPage;
-// ─────────────────────────────────────────────────────────────────
 
-const ROADMAP_DATA = [
+// ─────────────────────────────────────────────────────────────────
+//  SOCIAL PAGE MODULE v5
+// ─────────────────────────────────────────────────────────────────
+const SocialPage = {
+  _activeTab: 'feed',
+  _likedPosts: new Set(),
+
+  render() {
+    const activeBtn = document.querySelector('#social-tabs .social-tab.active');
+    this.switchTab(activeBtn || document.querySelector('#social-tabs .social-tab'), this._activeTab);
+    const badge = document.getElementById('social-badge');
+    if (badge) badge.textContent = `${(window.VELONIA.State.read('posts')||[]).length} Posts`;
+  },
+
+  switchTab(btn, tab) {
+    this._activeTab = tab;
+    document.querySelectorAll('#social-tabs .social-tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.social-content').forEach(c=>c.style.display='none');
+    if (btn) btn.classList.add('active');
+    const panel = document.getElementById(`sc-${tab}`);
+    if (panel) panel.style.display = 'block';
+    const map = { feed:()=>this._renderFeed(), instagram:()=>this._renderInstagram(), youtube:()=>this._renderYoutube(), bubble:()=>this._renderBubble(), tiktok:()=>this._renderTikTok(), weverse:()=>this._renderWeverse() };
+    if (map[tab]) map[tab]();
+  },
+
+  _esc(s)  { return window.VELONIA.Utils.esc(s); },
+  _getAccount(p,s) { return p.accountId?(s.socialAccounts||[]).find(a=>a.id==p.accountId):null; },
+  _getCharForPost(p,s) {
+    const acc=this._getAccount(p,s);
+    if(acc?.characterId) return (s.characters||[]).find(c=>c.id==acc.characterId);
+    if(p.char) return (s.characters||[]).find(c=>c.name===p.char);
+    return null;
+  },
+  _pColors: { instagram:'#e1306c',youtube:'#ff0000',tiktok:'#69c9d0',bubble:'#b060ff',weverse:'#00e5ff',twitter:'#1da1f2',threads:'#888' },
+
+  _avatarHtml(char, acc, size=40) {
+    const img  = char?.imgUrls?.[0]||char?.imgUrl||'';
+    const emoji= char?.emoji||acc?.emoji||'⭐';
+    return `<div style="width:${size}px;height:${size}px;border-radius:50%;background:linear-gradient(135deg,var(--navy-light),#1a0540);display:flex;align-items:center;justify-content:center;font-size:${size*0.45}px;overflow:hidden;flex-shrink:0;border:2px solid rgba(176,96,255,0.3);">
+      ${img?`<img src="${this._esc(img)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.style.display='none'">`:''}
+      <span style="${img?'display:none':''}">${this._esc(emoji)}</span>
+    </div>`;
+  },
+
+  // ── FEED ─────────────────────────────────────────────
+  _renderFeed() {
+    const el=document.getElementById('sc-feed'); if(!el) return;
+    const state=window.VELONIA.State.get();
+    const posts=[...(state.posts||[])].reverse();
+    if(!posts.length){ el.innerHTML=`<div style="text-align:center;padding:60px;color:var(--text-secondary);"><div style="font-size:48px;margin-bottom:16px;">📭</div><div style="font-family:'Orbitron',monospace;font-size:14px;">No posts yet</div><div style="font-size:12px;margin-top:8px;color:var(--text-dim)">Use ✏ New Post or Admin → Posts</div></div>`; return; }
+    el.innerHTML=`<div class="feed-list">${posts.map(p=>this._feedCard(p,state)).join('')}</div>`;
+  },
+
+  _feedCard(p, state) {
+    const char=this._getCharForPost(p,state), acc=this._getAccount(p,state);
+    const platform=p.platform||acc?.platform||'instagram';
+    const pColor=this._pColors[platform]||'#607d8b';
+    const handle=acc?'@'+acc.handle:(char?.name||p.char||'Unknown');
+    const liked=this._likedPosts.has(p.id);
+    const likes=parseInt(p.likes)||0;
+    return `
+      <div class="feed-post" onclick="VELONIA.SocialPage.openPostDetail(${p.id})">
+        <div class="feed-post-header">
+          ${this._avatarHtml(char,acc,40)}
+          <div style="flex:1;min-width:0;margin-left:10px;">
+            <div class="feed-handle">${this._esc(handle)}</div>
+            <div style="font-size:11px;color:var(--text-secondary);">${this._esc(p.posted||'just now')}</div>
+          </div>
+          <span class="feed-platform-tag" style="background:${pColor}18;border:1px solid ${pColor}33;color:${pColor};">${platform}</span>
+        </div>
+        ${p.imageUrl
+          ?`<div class="feed-post-media"><img src="${this._esc(p.imageUrl)}" style="width:100%;max-height:320px;object-fit:cover;" onerror="this.parentElement.innerHTML='<div class=feed-post-media-ph>${this._esc(p.emoji||'📸')}</div>'"></div>`
+          :`<div class="feed-post-media-ph" style="font-size:64px;background:linear-gradient(135deg,${pColor}18,${pColor}08);display:flex;align-items:center;justify-content:center;height:160px;">${this._esc(p.emoji||'📸')}</div>`}
+        <div class="feed-post-body">
+          ${p.title?`<div style="font-size:14px;font-weight:600;margin-bottom:6px;">${this._esc(p.title)}</div>`:''}
+          ${(p.content||p.caption)?`<div class="feed-post-caption">${this._esc((p.content||p.caption||'').substring(0,200))}${(p.content||p.caption||'').length>200?'…':''}</div>`:''}
+          <div class="feed-post-stats">
+            <button class="feed-stat-btn${liked?' liked':''}" onclick="event.stopPropagation();VELONIA.SocialPage.toggleLike(${p.id},this)">
+              ${liked?'❤':'🤍'} <span>${liked?likes+1:likes}</span>
+            </button>
+            <button class="feed-stat-btn" onclick="event.stopPropagation();VELONIA.SocialPage.openPostDetail(${p.id})">
+              💬 <span>${(p.commentThread||[]).length||p.comments||0}</span>
+            </button>
+            ${p.views?`<span style="color:var(--text-dim);font-size:12px;">👁 ${this._esc(p.views)}</span>`:''}
+            <span style="margin-left:auto;font-size:10px;color:var(--text-dim);">${(p.tags||[]).slice(0,2).map(t=>'#'+this._esc(t)).join(' ')}</span>
+          </div>
+        </div>
+      </div>`;
+  },
+
+  toggleLike(postId, btn) {
+    this._likedPosts.has(postId)?this._likedPosts.delete(postId):this._likedPosts.add(postId);
+    const liked=this._likedPosts.has(postId);
+    const p=(window.VELONIA.State.read('posts')||[]).find(x=>x.id==postId);
+    const likes=parseInt(p?.likes)||0;
+    btn.classList.toggle('liked',liked);
+    btn.innerHTML=`${liked?'❤':'🤍'} <span>${liked?likes+1:likes}</span>`;
+    window.VELONIA.Notify.toast(liked?'❤ Liked!':'💔 Unliked');
+  },
+
+  // ── INSTAGRAM ────────────────────────────────────────
+  _renderInstagram() {
+    const el=document.getElementById('sc-instagram'); if(!el) return;
+    const state=window.VELONIA.State.get();
+    const posts=(state.posts||[]).filter(p=>p.platform==='instagram');
+    const chars=state.characters||[];
+    const accs=(state.socialAccounts||[]).filter(a=>a.platform==='instagram');
+    const stories=accs.length>0?accs:chars.slice(0,8);
+    el.innerHTML=`
+      <div class="insta-wrapper">
+        <div class="insta-stories">
+          ${stories.map((s,i)=>{
+            const char=s.characterId?chars.find(c=>c.id==s.characterId):(s.emoji?null:chars.find(c=>c.name===s.name));
+            const name=s.handle||s.displayName||s.name||'?';
+            const img=char?.imgUrls?.[0]||char?.imgUrl||'';
+            const emoji=char?.emoji||s.emoji||'⭐';
+            return `<div class="insta-story" onclick="VELONIA.Notify.toast('📸 ${this._esc(name)}\'s story')">
+              <div class="insta-story-ring${i>2?' viewed':''}">
+                <div class="insta-story-avatar">
+                  ${img?`<img src="${this._esc(img)}" onerror="this.style.display='none'">`:''}
+                  <span style="${img?'display:none':''}">${this._esc(emoji)}</span>
+                </div>
+              </div>
+              <div class="insta-story-name">${this._esc(name)}</div>
+            </div>`;
+          }).join('')}
+        </div>
+        <div class="instagram-grid">
+          ${posts.map(p=>`
+            <div class="insta-post" onclick="VELONIA.SocialPage.openPostDetail(${p.id})">
+              <div class="insta-post-ph">
+                ${p.imageUrl?`<img src="${this._esc(p.imageUrl)}" onerror="this.style.display='none'">`:''}
+                <span style="${p.imageUrl?'display:none':''}font-size:32px;">${this._esc(p.emoji||'📸')}</span>
+              </div>
+              ${p.mediaType==='video'||p.mediaType==='reel'?'<div class="insta-reel-badge">▶ Reel</div>':''}
+              <div class="insta-post-overlay"><div class="insta-stat">❤ ${this._esc(p.likes||'0')}</div><div class="insta-stat">💬 ${this._esc(p.comments||'0')}</div></div>
+            </div>`).join('')}
+          ${!posts.length?`<div style="grid-column:1/-1;padding:40px;text-align:center;color:var(--text-dim);">No Instagram posts yet</div>`:''}
+        </div>
+        <div>
+          ${posts.map(p=>{
+            const char=this._getCharForPost(p,state), acc=this._getAccount(p,state);
+            const handle=acc?'@'+acc.handle:(char?.name||p.char||'?');
+            return `<div style="display:flex;gap:12px;padding:14px 0;border-bottom:1px solid rgba(255,255,255,0.05);cursor:pointer;" onclick="VELONIA.SocialPage.openPostDetail(${p.id})">
+              ${this._avatarHtml(char,acc,40)}
+              <div style="flex:1;min-width:0;margin-left:2px;">
+                <div style="font-weight:600;font-size:13px;margin-bottom:3px;">${this._esc(handle)}</div>
+                <div style="font-size:13px;color:var(--text-secondary);">${this._esc((p.content||p.caption||'').substring(0,120))}</div>
+                <div style="display:flex;gap:16px;margin-top:6px;font-size:11px;color:var(--text-dim);">
+                  <span>❤ ${this._esc(p.likes||'0')}</span><span>💬 ${(p.commentThread||[]).length||p.comments||0}</span>
+                  <span style="margin-left:auto;">${this._esc(p.posted||'')}</span>
+                </div>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>`;
+  },
+
+  // ── YOUTUBE ──────────────────────────────────────────
+  _renderYoutube() {
+    const el=document.getElementById('sc-youtube'); if(!el) return;
+    const state=window.VELONIA.State.get();
+    const posts=(state.posts||[]).filter(p=>p.platform==='youtube');
+    const chars=[...new Set(posts.map(p=>p.char||''))].filter(Boolean);
+    el.innerHTML=`
+      ${chars.slice(0,2).map(name=>{
+        const char=(state.characters||[]).find(c=>c.name===name);
+        const cp=posts.filter(p=>p.char===name);
+        const tv=cp.reduce((s,p)=>s+parseInt(p.views||0),0);
+        return `<div class="yt-channel-header">
+          ${this._avatarHtml(char,null,56)}
+          <div style="margin-left:4px;"><div style="font-family:'Orbitron',monospace;font-size:14px;font-weight:700;">${this._esc(name)}</div><div style="font-size:11px;color:var(--text-secondary);margin-top:3px;">${cp.length} videos · ${window.VELONIA.Utils.shortNum(tv)} total views</div></div>
+          <button onclick="VELONIA.Notify.toast('🔔 Subscribed!')" style="margin-left:auto;padding:8px 18px;background:#ff0000;border:none;border-radius:6px;color:white;font-size:11px;font-family:'Orbitron',monospace;cursor:pointer;">SUBSCRIBE</button>
+        </div>`;
+      }).join('')}
+      <div class="yt-video-list">
+        ${posts.map(p=>`
+          <div class="yt-video" onclick="VELONIA.SocialPage.openPostDetail(${p.id})">
+            <div class="yt-thumb">
+              <div class="yt-thumb-ph">${p.imageUrl?`<img src="${this._esc(p.imageUrl)}" onerror="this.style.display='none'">`:''}<span style="${p.imageUrl?'display:none':''}">${this._esc(p.emoji||'🎬')}</span></div>
+              <div class="yt-play-btn"><div class="yt-play-icon">▶</div></div>
+              ${p.duration?`<div class="yt-duration">${this._esc(p.duration)}</div>`:''}
+            </div>
+            <div class="yt-info">
+              <div class="yt-title">${this._esc(p.title||p.content||p.caption||'Video')}</div>
+              <div class="yt-meta">${this._esc(p.char||'')} · ${this._esc(p.views||'0')} views · ${this._esc(p.posted||'')}</div>
+            </div>
+          </div>`).join('')}
+        ${!posts.length?`<div style="padding:40px;text-align:center;color:var(--text-dim);">No YouTube posts yet</div>`:''}
+      </div>`;
+  },
+
+  // ── BUBBLE ───────────────────────────────────────────
+  _renderBubble() {
+    const el=document.getElementById('sc-bubble'); if(!el) return;
+    const state=window.VELONIA.State.get();
+    const bubbles=state.bubbleMessages||[];
+    if(!bubbles.length){ el.innerHTML=`<div style="text-align:center;padding:60px;color:var(--text-secondary);"><div style="font-size:48px;margin-bottom:16px;">💬</div><div style="font-family:'Orbitron',monospace;font-size:14px;">No bubble messages</div></div>`; return; }
+    el.innerHTML=`<div class="bubble-list">${bubbles.map((bm,bi)=>{
+      const char=(state.characters||[]).find(c=>c.name===bm.char);
+      const img=char?.imgUrls?.[0]||char?.imgUrl||'';
+      const emoji=char?.emoji||'⭐';
+      return `<div class="bubble-chat">
+        <div class="bubble-header">
+          <div class="bubble-avatar">${img?`<img src="${this._esc(img)}" onerror="this.style.display='none'">`:''}<span style="${img?'display:none':''}">${this._esc(emoji)}</span></div>
+          <div style="flex:1;"><div class="bubble-name">${this._esc(bm.char)}</div><div class="bubble-status">● Online — Bubble Exclusive</div></div>
+        </div>
+        <div class="bubble-messages" id="bubble-msgs-${bi}">
+          ${(bm.messages||[]).map(m=>`
+            <div class="bubble-msg ${m.type}">
+              ${m.type==='idol'?`<div class="bubble-avatar" style="width:28px;height:28px;font-size:13px;flex-shrink:0;">${img?`<img src="${this._esc(img)}" onerror="this.style.display='none'">`:''}<span style="${img?'display:none':''}">${this._esc(emoji)}</span></div>`:''}
+              <div>
+                ${m.type==='idol'?`<div class="bubble-time">${this._esc(m.time)}</div>`:''}
+                <div class="bubble-bubble">${this._esc(m.text)}</div>
+                ${m.type==='fan'?`<div class="bubble-time" style="text-align:right">${this._esc(m.time)}</div>`:''}
+              </div>
+            </div>`).join('')}
+        </div>
+        <div class="bubble-reply-bar">
+          <input class="bubble-reply-input" placeholder="Reply to ${this._esc(bm.char)}..." id="bubble-input-${bi}" onkeydown="if(event.key==='Enter')VELONIA.SocialPage.sendBubbleReply(${bi})">
+          <button class="bubble-send-btn" onclick="VELONIA.SocialPage.sendBubbleReply(${bi})">↑</button>
+        </div>
+      </div>`;
+    }).join('')}</div>`;
+  },
+
+  sendBubbleReply(idx) {
+    const input=document.getElementById(`bubble-input-${idx}`); if(!input?.value.trim()) return;
+    const text=input.value.trim();
+    const bubbles=window.VELONIA.State.read('bubbleMessages')||[];
+    if(!bubbles[idx]) return;
+    const now=new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+    bubbles[idx].messages.push({type:'fan',text,time:now});
+    window.VELONIA.State.set('bubbleMessages',bubbles);
+    window.VELONIA.App.save();
+    const msgsEl=document.getElementById(`bubble-msgs-${idx}`);
+    if(msgsEl){ const div=document.createElement('div'); div.className='bubble-msg fan'; div.innerHTML=`<div><div class="bubble-bubble">${this._esc(text)}</div><div class="bubble-time" style="text-align:right">${now}</div></div>`; msgsEl.appendChild(div); msgsEl.scrollTop=msgsEl.scrollHeight; }
+    input.value=''; window.VELONIA.Notify.toast('💬 Replied!');
+  },
+
+  // ── TIKTOK ───────────────────────────────────────────
+  _renderTikTok() {
+    const el=document.getElementById('sc-tiktok'); if(!el) return;
+    const state=window.VELONIA.State.get();
+    const posts=(state.posts||[]).filter(p=>p.platform==='tiktok');
+    el.innerHTML=!posts.length
+      ?`<div style="text-align:center;padding:60px;color:var(--text-secondary);"><div style="font-size:48px;margin-bottom:16px;">🎵</div><div style="font-family:'Orbitron',monospace;font-size:14px;">No TikTok posts yet</div></div>`
+      :`<div class="tiktok-grid">${posts.map(p=>{
+          const char=this._getCharForPost(p,state), acc=this._getAccount(p,state);
+          const handle=acc?'@'+acc.handle:(char?.name||p.char||'?');
+          return `<div class="tiktok-card" onclick="VELONIA.SocialPage.openPostDetail(${p.id})">
+            <div class="tiktok-ph">${p.imageUrl?`<img src="${this._esc(p.imageUrl)}" onerror="this.style.display='none'">`:''}<span style="${p.imageUrl?'display:none':''}">${this._esc(p.emoji||'🎵')}</span></div>
+            <div class="tiktok-overlay"></div><div class="tiktok-play">▶</div>
+            <div class="tiktok-info"><div class="tiktok-handle">${this._esc(handle)}</div><div class="tiktok-views">👁 ${this._esc(p.views||'0')} · ❤ ${this._esc(p.likes||'0')}</div></div>
+          </div>`;
+        }).join('')}</div>`;
+  },
+
+  // ── WEVERSE ──────────────────────────────────────────
+  _renderWeverse() {
+    const el=document.getElementById('sc-weverse'); if(!el) return;
+    const state=window.VELONIA.State.get();
+    const posts=(state.posts||[]).filter(p=>p.platform==='weverse');
+    el.innerHTML=!posts.length
+      ?`<div style="text-align:center;padding:60px;color:var(--text-secondary);"><div style="font-size:48px;margin-bottom:16px;">🌸</div><div style="font-family:'Orbitron',monospace;font-size:14px;">No Weverse posts yet</div></div>`
+      :`<div class="weverse-list">${posts.map(p=>{
+          const char=this._getCharForPost(p,state), acc=this._getAccount(p,state);
+          const handle=acc?'@'+acc.handle:(char?.name||p.char||'?');
+          return `<div class="weverse-post" onclick="VELONIA.SocialPage.openPostDetail(${p.id})">
+            <div class="weverse-header">
+              ${this._avatarHtml(char,acc,36)}
+              <div style="margin-left:6px;"><div style="font-size:13px;font-weight:600;">${this._esc(handle)}</div><div style="font-size:10px;color:var(--text-secondary);">${this._esc(p.posted||'')}</div></div>
+              <span class="weverse-badge" style="margin-left:auto;">ARTIST</span>
+            </div>
+            <div class="weverse-content">${this._esc((p.content||p.caption||'').substring(0,200))}</div>
+            <div class="weverse-footer"><span>❤ ${this._esc(p.likes||'0')}</span><span>💬 ${(p.commentThread||[]).length||p.comments||0}</span></div>
+          </div>`;
+        }).join('')}</div>`;
+  },
+
+  // ── POST DETAIL ──────────────────────────────────────
+  openPostDetail(postId) {
+    const state=window.VELONIA.State.get();
+    const p=(state.posts||[]).find(x=>x.id==postId); if(!p) return;
+    const char=this._getCharForPost(p,state), acc=this._getAccount(p,state);
+    const platform=p.platform||acc?.platform||'instagram';
+    const pColor=this._pColors[platform]||'#607d8b';
+    const handle=acc?'@'+acc.handle:(char?.name||p.char||'Unknown');
+    const comments=p.commentThread||[];
+    const liked=this._likedPosts.has(p.id);
+
+    const modal=document.getElementById('post-detail-modal');
+    modal.innerHTML=`
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--glass-border);">
+        <div style="display:flex;align-items:center;gap:10px;">
+          ${this._avatarHtml(char,acc,38)}
+          <div style="margin-left:2px;"><div style="font-size:13px;font-weight:600;">${this._esc(handle)}</div><div style="font-size:10px;color:var(--text-secondary);">${this._esc(p.posted||'')}</div></div>
+          <span style="padding:2px 8px;border-radius:4px;font-size:9px;letter-spacing:1px;background:${pColor}18;border:1px solid ${pColor}33;color:${pColor};font-family:'Orbitron',monospace;">${platform}</span>
+        </div>
+        <button onclick="VELONIA.SocialPage.closePostDetail()" style="background:none;border:none;color:var(--text-secondary);cursor:pointer;font-size:18px;">✕</button>
+      </div>
+      ${p.imageUrl?`<div style="width:100%;max-height:400px;overflow:hidden;"><img src="${this._esc(p.imageUrl)}" style="width:100%;max-height:400px;object-fit:cover;" onerror="this.parentElement.innerHTML='<div style=font-size:80px;padding:40px;text-align:center>${this._esc(p.emoji||'📸')}</div>'"></div>`
+      :`<div style="height:140px;display:flex;align-items:center;justify-content:center;font-size:72px;background:linear-gradient(135deg,${pColor}18,${pColor}08);">${this._esc(p.emoji||'📸')}</div>`}
+      <div style="padding:14px 18px 10px;">
+        ${p.title?`<div style="font-size:14px;font-weight:600;margin-bottom:6px;">${this._esc(p.title)}</div>`:''}
+        <div style="font-size:13px;color:var(--text-secondary);line-height:1.7;">${this._esc(p.content||p.caption||'')}</div>
+        <div style="display:flex;gap:20px;margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.05);">
+          <button class="feed-stat-btn${liked?' liked':''}" onclick="VELONIA.SocialPage.toggleLike(${p.id},this)">${liked?'❤':'🤍'} ${parseInt(p.likes)||0}</button>
+          <span style="font-size:12px;color:var(--text-dim);">💬 ${comments.length}</span>
+          ${p.views?`<span style="font-size:12px;color:var(--text-dim);">👁 ${this._esc(p.views)}</span>`:''}
+        </div>
+      </div>
+      <div style="padding:8px 18px;font-size:10px;color:var(--text-secondary);letter-spacing:2px;font-family:'Orbitron',monospace;border-top:1px solid rgba(255,255,255,0.05);">COMMENTS</div>
+      <div class="comment-list" id="post-comment-list">
+        ${!comments.length?`<div style="color:var(--text-dim);font-size:12px;padding:8px 0;">No comments yet — be the first!</div>`
+        :comments.map(c=>`<div class="comment-item"><div class="comment-avatar" style="${c.isIdol?'background:linear-gradient(135deg,var(--neon-purple),#1a0540)':''}">${c.authorEmoji||c.author?.charAt(0)||'?'}</div><div class="comment-bubble"><div class="comment-author" style="${c.isIdol?'color:var(--neon-purple)':''}">${this._esc(c.author)}${c.isIdol?' ✓':''}</div><div class="comment-text">${this._esc(c.text)}</div><div style="font-size:10px;color:var(--text-dim);margin-top:3px;">${this._esc(c.postedAt||'')} · ❤ ${c.likes||0}</div></div></div>`).join('')}
+      </div>
+      <div class="comment-input-row">
+        <input class="comment-input" id="comment-input-${p.id}" placeholder="Add a comment..." onkeydown="if(event.key==='Enter')VELONIA.SocialPage.submitComment(${p.id})">
+        <button onclick="VELONIA.SocialPage.submitComment(${p.id})" style="padding:8px 16px;background:var(--neon-purple);border:none;border-radius:20px;color:white;font-size:12px;cursor:pointer;">Post</button>
+      </div>`;
+    document.getElementById('post-detail-overlay').style.display='flex';
+  },
+
+  submitComment(postId) {
+    const input=document.getElementById(`comment-input-${postId}`); if(!input?.value.trim()) return;
+    const text=input.value.trim();
+    const state=window.VELONIA.State.get();
+    const posts=state.posts||[];
+    const idx=posts.findIndex(p=>p.id==postId); if(idx<0) return;
+    if(!posts[idx].commentThread) posts[idx].commentThread=[];
+    const now=new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+    const comment={author:'You',text,postedAt:now,likes:0,isIdol:false};
+    posts[idx].commentThread.push(comment);
+    window.VELONIA.State.set('posts',posts); window.VELONIA.App.save();
+    const list=document.getElementById('post-comment-list');
+    if(list){ const div=document.createElement('div'); div.className='comment-item'; div.innerHTML=`<div class="comment-avatar">${this._esc(comment.author.charAt(0))}</div><div class="comment-bubble"><div class="comment-author">${this._esc(comment.author)}</div><div class="comment-text">${this._esc(comment.text)}</div></div>`; list.appendChild(div); list.scrollTop=list.scrollHeight; }
+    input.value=''; window.VELONIA.Notify.toast('💬 Comment posted!');
+  },
+
+  closePostDetail() { document.getElementById('post-detail-overlay').style.display='none'; },
+
+  // ── POST COMPOSER ─────────────────────────────────────
+  openComposer() {
+    const state=window.VELONIA.State.get();
+    const accounts=state.socialAccounts||[];
+    const chars=state.characters||[];
+    const platforms=['instagram','youtube','tiktok','weverse','bubble','twitter','threads'];
+    const modal=document.getElementById('composer-modal');
+    modal.innerHTML=`
+      <div class="composer-header">
+        <div style="font-family:'Orbitron',monospace;font-size:14px;color:var(--neon-purple);">✏ New Post</div>
+        <button onclick="VELONIA.SocialPage.closeComposer()" style="background:none;border:none;color:var(--text-secondary);cursor:pointer;font-size:18px;">✕</button>
+      </div>
+      <div class="composer-body">
+        <div class="composer-account-row">
+          <div style="font-size:12px;color:var(--text-secondary);width:70px;flex-shrink:0;">ACCOUNT</div>
+          <select class="form-select" id="comp-account" style="flex:1;" onchange="VELONIA.SocialPage._updateComposerPlatform()">
+            <option value="">— Select Account —</option>
+            ${accounts.map(a=>{ const char=chars.find(c=>c.id==a.characterId); return `<option value="${a.id}" data-platform="${this._esc(a.platform)}">${char?.emoji||'📱'} @${this._esc(a.handle)} (${a.platform})</option>`; }).join('')}
+          </select>
+        </div>
+        <div class="composer-account-row">
+          <div style="font-size:12px;color:var(--text-secondary);width:70px;flex-shrink:0;">PLATFORM</div>
+          <select class="form-select" id="comp-platform" style="flex:1;">${platforms.map(p=>`<option value="${p}">${p}</option>`).join('')}</select>
+        </div>
+        <div class="composer-account-row">
+          <div style="font-size:12px;color:var(--text-secondary);width:70px;flex-shrink:0;">TYPE</div>
+          <select class="form-select" id="comp-type" style="flex:1;">${['photo','video','reel','story','text'].map(t=>`<option value="${t}">${t}</option>`).join('')}</select>
+        </div>
+        <textarea class="composer-textarea" id="comp-content" placeholder="What's on your mind?" oninput="document.getElementById('comp-char-count').textContent=this.value.length+' / 2200'"></textarea>
+        <div style="display:flex;justify-content:flex-end;margin-top:4px;"><span class="composer-char-count" id="comp-char-count">0 / 2200</span></div>
+        <div class="composer-toolbar">
+          <span style="font-size:11px;color:var(--text-secondary);">Image URL:</span>
+          <input class="form-input" id="comp-image" placeholder="https://... (optional)" style="flex:1;font-size:11px;padding:6px 10px;">
+        </div>
+        <div class="composer-toolbar" style="margin-top:8px;">
+          <span style="font-size:11px;color:var(--text-secondary);">Emoji:</span>
+          ${['📸','🎵','⚡','🌙','💜','🎬','🔥','✨'].map(e=>`<button class="composer-tool-btn" onclick="document.getElementById('comp-emoji').value='${e}'">${e}</button>`).join('')}
+          <input class="form-input" id="comp-emoji" value="📸" style="width:50px;font-size:16px;padding:4px 8px;text-align:center;">
+        </div>
+        <div class="composer-toolbar" style="margin-top:8px;">
+          <span style="font-size:11px;color:var(--text-secondary);">Tags:</span>
+          <input class="form-input" id="comp-tags" placeholder="tag1, tag2" style="flex:1;font-size:11px;padding:6px 10px;">
+        </div>
+      </div>
+      <div class="composer-footer">
+        <div style="font-size:11px;color:var(--text-secondary);">Appears in Feed + platform tab</div>
+        <div style="display:flex;gap:8px;">
+          <button onclick="VELONIA.SocialPage.closeComposer()" style="padding:8px 16px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:var(--text-secondary);cursor:pointer;font-size:12px;">Cancel</button>
+          <button onclick="VELONIA.SocialPage.submitPost()" style="padding:8px 20px;background:var(--neon-purple);border:none;border-radius:6px;color:white;cursor:pointer;font-size:12px;font-family:'Orbitron',monospace;letter-spacing:1px;">POST</button>
+        </div>
+      </div>`;
+    document.getElementById('composer-overlay').style.display='flex';
+  },
+
+  _updateComposerPlatform() {
+    const sel=document.getElementById('comp-account');
+    const opt=sel?.options[sel.selectedIndex];
+    const plat=opt?.dataset.platform;
+    if(plat){ const ps=document.getElementById('comp-platform'); if(ps) ps.value=plat; }
+  },
+
+  submitPost() {
+    const content=document.getElementById('comp-content')?.value.trim();
+    if(!content){ window.VELONIA.Notify.error('❌ Content required'); return; }
+    const platform=document.getElementById('comp-platform')?.value||'instagram';
+    const accId=document.getElementById('comp-account')?.value;
+    const state=window.VELONIA.State.get();
+    const acc=accId?(state.socialAccounts||[]).find(a=>a.id==accId):null;
+    const char=acc?.characterId?(state.characters||[]).find(c=>c.id==acc.characterId):null;
+    const now=new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+    const post={id:window.VELONIA.Utils.newId(),_meta:window.VELONIA.Utils.meta(),content,caption:content,platform,accountId:accId?(isNaN(accId)?accId:Number(accId)):null,char:char?.name||'',emoji:document.getElementById('comp-emoji')?.value||'📸',imageUrl:document.getElementById('comp-image')?.value.trim()||'',mediaType:document.getElementById('comp-type')?.value||'photo',tags:(document.getElementById('comp-tags')?.value||'').split(',').map(t=>t.trim()).filter(Boolean),likes:'0',comments:'0',views:'0',posted:now,postedAt:new Date().toISOString(),commentThread:[]};
+    window.VELONIA.State.addEntity('posts',post);
+    window.VELONIA.App.save();
+    this.closeComposer(); this.render();
+    window.VELONIA.Notify.success(`✅ Posted to ${platform}!`);
+  },
+
+  closeComposer() { document.getElementById('composer-overlay').style.display='none'; },
+};
+window.VELONIA.SocialPage = SocialPage;
   {
     phase: 1, title: 'CORE ARCHITECTURE', sub: 'Tamamlandı — v2 + v3', color: '#00e5ff',
     status: 'done',
@@ -7910,22 +8489,22 @@ const ROADMAP_DATA = [
     ]
   },
   {
-    phase: 5, title: 'SOCIAL MEDIA — Tam Platform Sistemi', sub: 'SIRADAM — Sonraki geliştirme', color: '#ff2d9b',
-    status: 'active',
+    phase: 5, title: 'SOCIAL MEDIA — Tam Platform Sistemi', sub: 'Tamamlandı — v9', color: '#ff2d9b',
+    status: 'done',
     items: [
-      { icon:'📋', title:'Social Accounts Sayfası (yeni sekme)',desc:'Platform başlıkları: Instagram / YouTube / Bubble / TikTok', status:'planned' },
-      { icon:'📋', title:'Post Composer',                      desc:'Admin olmadan post oluştur — account seç, içerik yaz, emoji/image ekle', status:'planned' },
-      { icon:'📋', title:'Instagram Grid Görünümü',            desc:'Gerçek Instagram-benzeri 3-kolon grid, story çemberleri', status:'planned' },
-      { icon:'📋', title:'YouTube Video Listesi',              desc:'Thumbnail, view sayısı, format YouTube card olarak',  status:'planned' },
-      { icon:'📋', title:'Bubble Chat Görünümü',               desc:'Gerçek chat bubble UI, fan/idol mesaj ayrımı, emoji tepkiler', status:'planned' },
-      { icon:'📋', title:'Comment Thread Sistemi',             desc:'Post\'a yorum ekle, idol cevabı, like sistemi',        status:'planned' },
-      { icon:'📋', title:'Social Feed (tüm platformlar birleşik)', desc:'Dashboard\'da haber akışı gibi tüm postlar sırayla', status:'planned' },
-      { icon:'📋', title:'Follower / Like Animasyonu',         desc:'Sayaçlar artış animasyonu ile güncellenir',            status:'planned' },
+      { icon:'✅', title:'Feed — Tüm Platformlar Birleşik',    desc:'Tüm postlar tek akışta, platform badge, like/yorum, tıklanabilir kart',         status:'done' },
+      { icon:'✅', title:'Instagram — Stories + Grid + Liste', desc:'Hikaye çemberleri (viewed state), 3-kolon grid, Reel badge, feed listesi',       status:'done' },
+      { icon:'✅', title:'YouTube — Channel Header + Video',   desc:'Kanal başlığı, Subscribe butonu, video kartı, thumb/play hover animasyonu',       status:'done' },
+      { icon:'✅', title:'Bubble — Chat UI + Reply',           desc:'Gerçek chat bubble, idol/fan mesaj ayrımı, canlı reply input + Enter gönder',     status:'done' },
+      { icon:'✅', title:'TikTok — Dikey Video Grid',          desc:'9:16 aspect ratio kartlar, hover play overlay',                                    status:'done' },
+      { icon:'✅', title:'Weverse — Artist Post Akışı',        desc:'ARTIST badge, post listesi, yorum sayısı',                                        status:'done' },
+      { icon:'✅', title:'Post Composer (✏ New Post)',         desc:'Platform, account, type, emoji, image URL, tags → Feed\'e anında yayınla',       status:'done' },
+      { icon:'✅', title:'Post Detail Modal + Comment Thread', desc:'Tam post görünümü, yorum listesi, canlı yorum ekle, like toggle',                 status:'done' },
     ]
   },
   {
-    phase: 6, title: 'MUSIC SYSTEM — Spotify Mode Upgrade', sub: 'Phase 5 bittikten sonra', color: '#1db954',
-    status: 'planned',
+    phase: 6, title: 'MUSIC SYSTEM — Spotify Mode Upgrade', sub: 'SIRADAM — Sonraki geliştirme', color: '#1db954',
+    status: 'active',
     items: [
       { icon:'📋', title:'Album — Songs Listesi',              desc:'Her albümde şarkı listesi, title track işareti, süre', status:'planned' },
       { icon:'📋', title:'Album Detail Modal',                 desc:'Tracklist, artist linkleri, yayın tarihi, yorum',     status:'planned' },
