@@ -2794,11 +2794,23 @@ body:has(a:hover) #cursor, body:has(button:hover) #cursor { transform: scale(2);
      MUSIC PLAYER BAR
      ============================================================ -->
 <div id="player-bar">
+  <!-- Hidden embed containers — real audio source -->
+  <div id="yt-embed-container" style="position:absolute;width:0;height:0;overflow:hidden;pointer-events:none;opacity:0;">
+    <iframe id="yt-iframe" width="1" height="1" frameborder="0" allow="autoplay;encrypted-media" allowfullscreen></iframe>
+  </div>
+  <div id="spotify-embed-container" style="position:absolute;bottom:85px;right:20px;width:300px;border-radius:12px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.5);display:none;z-index:1001;">
+    <iframe id="spotify-iframe" style="border-radius:12px" width="300" height="80" frameborder="0" allowtransparency="true" allow="encrypted-media"></iframe>
+    <button onclick="VELONIA.EmbedPlayer.hideSpotify()" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,0.6);border:none;color:white;width:20px;height:20px;border-radius:50%;cursor:pointer;font-size:10px;display:flex;align-items:center;justify-content:center;">✕</button>
+  </div>
+
   <div class="player-track">
     <div class="player-art"><div class="player-art-ph" id="player-art-ph">🎵</div></div>
     <div class="player-info">
       <div class="player-title" id="player-title">No Track</div>
-      <div class="player-artist" id="player-artist">—</div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div class="player-artist" id="player-artist">—</div>
+        <span id="player-source-badge" style="display:none;font-size:9px;padding:1px 6px;border-radius:4px;font-family:'Orbitron',monospace;letter-spacing:1px;"></span>
+      </div>
     </div>
   </div>
   <div class="player-controls">
@@ -2817,9 +2829,9 @@ body:has(a:hover) #cursor, body:has(button:hover) #cursor { transform: scale(2);
       <span class="player-time" id="player-time-total">3:30</span>
     </div>
   </div>
-  <div class="player-vol">
-    <span>🔊</span>
-    <input type="range" class="vol-slider" min="0" max="100" value="70">
+  <div class="player-vol" style="display:flex;align-items:center;gap:8px;">
+    <span style="cursor:pointer;" onclick="VELONIA.EmbedPlayer.toggleSpotifyPanel()" id="player-source-icon" title="Audio source">🔊</span>
+    <input type="range" class="vol-slider" id="vol-slider" min="0" max="100" value="70" oninput="VELONIA.EmbedPlayer.setVolume(this.value)">
   </div>
 </div>
 
@@ -3403,38 +3415,72 @@ window.VELONIA = (function() {
     let _playing   = false;
     let _progress  = 0;
     let _interval  = null;
-    let _current   = null;  // current album object
+    let _current   = null;
+    let _duration  = 210;  // seconds, updated from track data
 
     function _tick() {
-      _progress += 0.5;
-      if (_progress >= 100) _progress = 0;
+      // Only tick the simulated bar if no real embed is driving audio
+      const embedMode = window.VELONIA?.EmbedPlayer?._activeMode;
+      if (embedMode === 'youtube') return; // YouTube IFrame API handles timing
+      _progress += (100 / (_duration * (1000 / CONFIG.PLAYER_TICK_MS)));
+      if (_progress >= 100) {
+        _progress = 0;
+        // Auto-advance to next track
+        if (window.VELONIA.MusicPage) window.VELONIA.MusicPage.nextTrack();
+        return;
+      }
+      _updateProgressUI();
+    }
+
+    function _updateProgressUI() {
       const fill = document.getElementById('player-progress-fill');
       const cur  = document.getElementById('player-time-cur');
       const tot  = document.getElementById('player-time-total');
       if (fill) fill.style.width = _progress + '%';
-      const total = 210;
-      const secs  = Math.floor(_progress / 100 * total);
-      if (cur)  cur.textContent  = `${Math.floor(secs/60)}:${String(secs%60).padStart(2,'0')}`;
-      if (tot)  tot.textContent  = `${Math.floor(total/60)}:${String(total%60).padStart(2,'0')}`;
+      const secs = Math.floor(_progress / 100 * _duration);
+      if (cur) cur.textContent = `${Math.floor(secs/60)}:${String(secs%60).padStart(2,'0')}`;
+      if (tot) tot.textContent = `${Math.floor(_duration/60)}:${String(_duration%60).padStart(2,'0')}`;
     }
 
     return {
       play(album) {
-        _current   = album;
-        _playing   = true;
-        const btn  = document.getElementById('play-pause-btn');
-        const tit  = document.getElementById('player-title');
-        const art  = document.getElementById('player-artist');
-        const ph   = document.getElementById('player-art-ph');
+        _current  = album;
+        _playing  = true;
+        _progress = 0;
+
+        // Parse track duration if available
+        const song = album._trackTitle && album.songs
+          ? album.songs.find(s => (typeof s === 'string' ? s : s.title) === album._trackTitle)
+          : null;
+        if (song && typeof song === 'object' && song.duration) {
+          const parts = song.duration.split(':').map(Number);
+          _duration = parts.length === 2 ? parts[0]*60 + parts[1] : 210;
+        } else {
+          _duration = 210;
+        }
+
+        // Update player bar UI
+        const btn = document.getElementById('play-pause-btn');
+        const tit = document.getElementById('player-title');
+        const art = document.getElementById('player-artist');
+        const ph  = document.getElementById('player-art-ph');
         if (btn) btn.textContent = '⏸';
-        if (tit) tit.textContent = album.tracks ? album.tracks[0] : album.title;
-        if (art) art.textContent = album.artist;
-        if (ph)  { ph.textContent = album.emoji; ph.style.background = `linear-gradient(135deg,${album.color},#0a0e2e)`; }
+        if (tit) tit.textContent = album._trackTitle || (album.tracks?.[0]) || album.title;
+        if (art) art.textContent = album.artist || album.group || '';
+        if (ph)  { ph.textContent = album.emoji||'🎵'; ph.style.background = `linear-gradient(135deg,${album.color||'#b060ff'},#0a0e2e)`; }
+        _updateProgressUI();
+
+        // Stop previous interval
         clearInterval(_interval);
         _interval = setInterval(_tick, CONFIG.PLAYER_TICK_MS);
-        Notify.toast(`▶ Now playing: ${album.title}`);
+
+        // Hand off to EmbedPlayer — it decides YouTube vs Spotify vs simulate
+        if (window.VELONIA?.EmbedPlayer) {
+          window.VELONIA.EmbedPlayer.play(album, song);
+        }
+
+        Notify.toast(`▶ Now playing: ${album._trackTitle || album.title}`);
         Bus.emit('media:play', album);
-        // Update Now Playing widget on dashboard
         _updateNowPlayingWidget(album, true);
       },
 
@@ -3446,9 +3492,20 @@ window.VELONIA = (function() {
           if (btn) btn.textContent = '▶';
           const npBtn = document.getElementById('np-play-btn');
           if (npBtn) npBtn.textContent = '▶';
+          if (window.VELONIA?.EmbedPlayer) window.VELONIA.EmbedPlayer.pause();
           Bus.emit('media:pause');
+          _updateNowPlayingWidget(_current, false);
         } else {
-          if (_current) this.play(_current);
+          _playing = true;
+          const btn = document.getElementById('play-pause-btn');
+          if (btn) btn.textContent = '⏸';
+          const npBtn = document.getElementById('np-play-btn');
+          if (npBtn) npBtn.textContent = '⏸';
+          if (window.VELONIA?.EmbedPlayer) window.VELONIA.EmbedPlayer.resume();
+          clearInterval(_interval);
+          _interval = setInterval(_tick, CONFIG.PLAYER_TICK_MS);
+          Bus.emit('media:play', _current);
+          _updateNowPlayingWidget(_current, true);
         }
       },
 
@@ -3456,8 +3513,18 @@ window.VELONIA = (function() {
         const bar  = e.currentTarget;
         const rect = bar.getBoundingClientRect();
         _progress  = ((e.clientX - rect.left) / rect.width) * 100;
-        const fill = document.getElementById('player-progress-fill');
-        if (fill) fill.style.width = _progress + '%';
+        _updateProgressUI();
+        if (window.VELONIA?.EmbedPlayer) {
+          const seekTo = Math.floor(_progress / 100 * _duration);
+          window.VELONIA.EmbedPlayer.seekTo(seekTo);
+        }
+      },
+
+      // Called by YouTube IFrame API to sync progress
+      syncProgress(currentSec, totalSec) {
+        if (totalSec > 0) _duration = totalSec;
+        _progress = (currentSec / _duration) * 100;
+        _updateProgressUI();
       },
 
       isPlaying: () => _playing,
@@ -5127,13 +5194,224 @@ window.VELONIA = (function() {
   window.toast               = (msg,t)=> Notify.toast(msg,t);
 
 
+  // ── EMBED PLAYER ─────────────────────────────────────────
+  /**
+   * EmbedPlayer — manages YouTube IFrame + Spotify embed.
+   * Priority: YouTube video ID → Spotify URL → simulate only.
+   * Exposed as window.VELONIA.EmbedPlayer after boot.
+   */
+  const EmbedPlayer = {
+    _activeMode: 'simulate',  // 'youtube' | 'spotify' | 'simulate'
+    _ytPlayer:   null,        // YouTube IFrame API player instance
+    _ytReady:    false,
+    _volume:     70,
+
+    /** Called by MediaManager.play() with album + optional song object */
+    play(album, song) {
+      // Resolve embed IDs: song-level first, then album-level
+      const ytId      = (song?.youtubeId  || album.youtubeId  || '').trim();
+      const spotifyUrl= (song?.spotifyUrl || album.spotifyUrl || '').trim();
+
+      if (ytId) {
+        this._playYouTube(ytId);
+      } else if (spotifyUrl) {
+        this._playSpotify(spotifyUrl);
+      } else {
+        // No embed data — pure simulation
+        this._activeMode = 'simulate';
+        this._updateSourceBadge('simulate');
+      }
+    },
+
+    pause() {
+      if (this._activeMode === 'youtube' && this._ytPlayer?.pauseVideo) {
+        try { this._ytPlayer.pauseVideo(); } catch(_) {}
+      }
+      // Spotify embed has no JS API — can't programmatically pause
+    },
+
+    resume() {
+      if (this._activeMode === 'youtube' && this._ytPlayer?.playVideo) {
+        try { this._ytPlayer.playVideo(); } catch(_) {}
+      }
+    },
+
+    seekTo(seconds) {
+      if (this._activeMode === 'youtube' && this._ytPlayer?.seekTo) {
+        try { this._ytPlayer.seekTo(seconds, true); } catch(_) {}
+      }
+    },
+
+    setVolume(val) {
+      this._volume = parseInt(val)||70;
+      if (this._activeMode === 'youtube' && this._ytPlayer?.setVolume) {
+        try { this._ytPlayer.setVolume(this._volume); } catch(_) {}
+      }
+    },
+
+    // ── YouTube ─────────────────────────────────────────
+    _playYouTube(videoId) {
+      this._activeMode = 'youtube';
+      this._updateSourceBadge('youtube');
+      // Hide Spotify panel
+      const spCon = document.getElementById('spotify-embed-container');
+      if (spCon) spCon.style.display = 'none';
+
+      if (this._ytReady && this._ytPlayer) {
+        // Player already created — load new video
+        try {
+          this._ytPlayer.loadVideoById({ videoId, startSeconds: 0 });
+          this._ytPlayer.setVolume(this._volume);
+        } catch(_) {
+          this._createYTPlayer(videoId);
+        }
+      } else if (window.YT && window.YT.Player) {
+        this._createYTPlayer(videoId);
+      } else {
+        // Load YouTube IFrame API dynamically
+        if (!document.getElementById('yt-api-script')) {
+          const s = document.createElement('script');
+          s.id  = 'yt-api-script';
+          s.src = 'https://www.youtube.com/iframe_api';
+          document.head.appendChild(s);
+        }
+        // Store pending video to play once API ready
+        this._pendingYtId = videoId;
+        // onYouTubeIframeAPIReady is set globally below
+      }
+    },
+
+    _createYTPlayer(videoId) {
+      this._ytReady = false;
+      // Destroy existing
+      try { if (this._ytPlayer?.destroy) this._ytPlayer.destroy(); } catch(_) {}
+      const container = document.getElementById('yt-embed-container');
+      if (!container) return;
+      // Replace iframe
+      container.innerHTML = '<div id="yt-player-div"></div>';
+      const self = this;
+      this._ytPlayer = new window.YT.Player('yt-player-div', {
+        height: '1', width: '1',
+        videoId,
+        playerVars: { autoplay: 1, controls: 0, disablekb: 1, fs: 0, iv_load_policy: 3, modestbranding: 1, rel: 0 },
+        events: {
+          onReady(e) {
+            self._ytReady = true;
+            e.target.setVolume(self._volume);
+            e.target.playVideo();
+          },
+          onStateChange(e) {
+            // YT.PlayerState.ENDED = 0, PLAYING = 1, PAUSED = 2
+            if (e.data === 0) {
+              // Song ended — advance to next
+              if (window.VELONIA?.MusicPage) window.VELONIA.MusicPage.nextTrack();
+            }
+          },
+          onError(e) {
+            console.warn('[EmbedPlayer] YouTube error:', e.data);
+            window.VELONIA?.Notify?.warn('⚠ YouTube video unavailable — simulating');
+            self._activeMode = 'simulate';
+            self._updateSourceBadge('simulate');
+          }
+        }
+      });
+      // Start progress sync loop
+      this._startYTSync();
+    },
+
+    _startYTSync() {
+      clearInterval(this._ytSyncInterval);
+      this._ytSyncInterval = setInterval(() => {
+        if (this._activeMode !== 'youtube' || !this._ytReady || !this._ytPlayer) return;
+        try {
+          const cur   = this._ytPlayer.getCurrentTime?.() || 0;
+          const total = this._ytPlayer.getDuration?.()    || 0;
+          if (total > 0 && window.VELONIA?.MediaManager?.syncProgress) {
+            window.VELONIA.MediaManager.syncProgress(cur, total);
+          }
+        } catch(_) {}
+      }, 500);
+    },
+
+    // ── Spotify ─────────────────────────────────────────
+    _playSpotify(spotifyUrl) {
+      this._activeMode = 'spotify';
+      this._updateSourceBadge('spotify');
+      // Stop YouTube if playing
+      try { if (this._ytPlayer?.pauseVideo) this._ytPlayer.pauseVideo(); } catch(_) {}
+
+      // Extract embed URL from various Spotify URL formats
+      // https://open.spotify.com/track/xxx → https://open.spotify.com/embed/track/xxx
+      // https://open.spotify.com/album/xxx → https://open.spotify.com/embed/album/xxx
+      let embedUrl = spotifyUrl
+        .replace('https://open.spotify.com/', 'https://open.spotify.com/embed/')
+        .replace('spotify:track:', 'https://open.spotify.com/embed/track/')
+        .replace('spotify:album:', 'https://open.spotify.com/embed/album/');
+
+      // If it's just a bare track ID, wrap it
+      if (!/spotify/.test(embedUrl)) {
+        embedUrl = `https://open.spotify.com/embed/track/${embedUrl}`;
+      }
+
+      const iframe = document.getElementById('spotify-iframe');
+      if (iframe) {
+        iframe.src = embedUrl + '?utm_source=generator&theme=0';
+      }
+      const panel = document.getElementById('spotify-embed-container');
+      if (panel) panel.style.display = 'block';
+
+      // Show a note that Spotify needs a browser tab
+      window.VELONIA?.Notify?.toast('🎵 Spotify player opened ↑');
+    },
+
+    hideSpotify() {
+      const panel = document.getElementById('spotify-embed-container');
+      if (panel) panel.style.display = 'none';
+      const iframe = document.getElementById('spotify-iframe');
+      if (iframe) iframe.src = '';
+      this._activeMode = 'simulate';
+      this._updateSourceBadge('simulate');
+    },
+
+    toggleSpotifyPanel() {
+      const panel = document.getElementById('spotify-embed-container');
+      if (!panel) return;
+      panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+    },
+
+    // ── Source badge ─────────────────────────────────────
+    _updateSourceBadge(mode) {
+      const badge = document.getElementById('player-source-badge');
+      const icon  = document.getElementById('player-source-icon');
+      if (!badge) return;
+      const map = {
+        youtube:  { text:'YT', bg:'rgba(255,0,0,0.25)', color:'#ff4444', icon:'▶' },
+        spotify:  { text:'SP', bg:'rgba(30,215,96,0.2)', color:'#1db954', icon:'🎵' },
+        simulate: { text:'SIM', bg:'rgba(176,96,255,0.15)', color:'var(--neon-purple)', icon:'🔊' }
+      };
+      const s = map[mode] || map.simulate;
+      badge.style.display     = 'inline-flex';
+      badge.style.background  = s.bg;
+      badge.style.color       = s.color;
+      badge.style.border      = `1px solid ${s.color}55`;
+      badge.textContent       = s.text;
+      if (icon) icon.textContent = s.icon;
+    }
+  };
+
+  // YouTube IFrame API global callback
+  window.onYouTubeIframeAPIReady = function() {
+    if (window.VELONIA?.EmbedPlayer?._pendingYtId) {
+      window.VELONIA.EmbedPlayer._createYTPlayer(window.VELONIA.EmbedPlayer._pendingYtId);
+      window.VELONIA.EmbedPlayer._pendingYtId = null;
+    }
+  };
+
   // ── Public API ───────────────────────────────────────────
   return {
-    // Modules (accessible for debugging and future extensions)
     CONFIG, Utils, Bus, Registry, State, DAL,
     SaveManager, Notify, MediaManager, AdminManager,
-    Router, Renderer, Actions, App,
-    // Boot entry point
+    Router, Renderer, Actions, App, EmbedPlayer,
     boot: () => App.boot()
   };
 
@@ -5291,6 +5569,8 @@ const SCHEMAS = {
       { key:'countdown',  label:'Countdown To', type:'date'   },
       { key:'description',label:'Description',  type:'textarea' },
       { key:'coverUrl',   label:'Cover Image URL', type:'text' },
+      { key:'youtubeId',  label:'YouTube Playlist/Video ID', type:'text', default:'' },
+      { key:'spotifyUrl', label:'Spotify Album/Playlist URL', type:'text', default:'' },
       { key:'tags',       label:'Tags',         type:'tags',  default:[] },
       // Songs are stored in albums.songs[] array
       { key:'songs',      label:'Songs',        type:'songs', default:[] },
@@ -5315,7 +5595,9 @@ const SCHEMAS = {
       { key:'duration',   label:'Duration',     type:'text',  default:'3:30' },
       { key:'featuring',  label:'Featuring',    type:'text'   },
       { key:'lyrics',     label:'Lyrics Snippet',type:'textarea' },
-      { key:'streamUrl',  label:'Stream URL',   type:'text'   },
+      { key:'youtubeId',  label:'YouTube Video ID', type:'text', default:'' },
+      { key:'spotifyUrl', label:'Spotify Track URL', type:'text', default:'' },
+      { key:'streamUrl',  label:'Stream URL (fallback)', type:'text' },
     ]
   },
 
@@ -7490,6 +7772,12 @@ window.VELONIA.App.boot = async function() {
   window.VELONIA.MusicPage = MusicPage;
   window.VELONIA.Router.register('music', () => MusicPage.render());
 
+  // Expose EmbedPlayer
+  window.VELONIA.EmbedPlayer = window.VELONIA.EmbedPlayer || window.VELONIA_EMBED || EmbedPlayer;
+  // Sync volume slider
+  const volSlider = document.getElementById('vol-slider');
+  if (volSlider) volSlider.oninput = (e) => window.VELONIA.EmbedPlayer.setVolume(e.target.value);
+
   // Update legacy shim
   window.filterChars = (btn) => CharPage.filter(btn, btn.dataset.filter);
 
@@ -8323,11 +8611,16 @@ const MusicPage = {
           <div style="font-size:10px;color:var(--text-secondary);letter-spacing:2px;font-family:'Orbitron',monospace;margin-bottom:14px;">TRACKLIST</div>
           <div id="album-tracklist">
             ${songs.map((s, si) => {
-              const isTitle = s.isTitle || (typeof s === 'string' && si === 0);
-              const title   = typeof s === 'string' ? s : (s.title || s);
-              const dur     = typeof s === 'object' ? s.duration : '';
-              const feat    = typeof s === 'object' ? s.featuring : '';
-              const nowT    = playing && window.VELONIA.MusicPage._currentTrackIdx === si;
+              const isTitle  = s.isTitle || (typeof s === 'string' && si === 0);
+              const title    = typeof s === 'string' ? s : (s.title || s);
+              const dur      = typeof s === 'object' ? s.duration    : '';
+              const feat     = typeof s === 'object' ? s.featuring   : '';
+              const ytId     = typeof s === 'object' ? (s.youtubeId  || '') : '';
+              const spUrl    = typeof s === 'object' ? (s.spotifyUrl || '') : '';
+              const hasYT    = !!ytId;
+              const hasSP    = !!spUrl;
+              const hasEmbed = hasYT || hasSP;
+              const nowT     = playing && window.VELONIA.MusicPage._currentTrackIdx === si;
               return `
                 <div onclick="VELONIA.MusicPage._playTrack(${a.id},${si})"
                   style="display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:8px;cursor:pointer;transition:all 0.2s;background:${nowT?`${color}18`:'transparent'};"
@@ -8340,7 +8633,12 @@ const MusicPage = {
                     </div>
                     ${feat?`<div style="font-size:10px;color:var(--text-dim);">feat. ${this._esc(feat)}</div>`:''}
                   </div>
-                  <div style="font-size:11px;color:var(--text-dim);font-family:'Space Mono',monospace;">${this._esc(dur||'')}</div>
+                  <div style="display:flex;align-items:center;gap:5px;">
+                    ${hasYT ?`<span title="YouTube: ${this._esc(ytId)}"  style="font-size:9px;padding:1px 6px;border-radius:3px;background:rgba(255,0,0,0.15);color:#ff5555;border:1px solid rgba(255,0,0,0.3);cursor:pointer;">▶ YT</span>`:''}
+                    ${hasSP ?`<span title="Spotify available"             style="font-size:9px;padding:1px 6px;border-radius:3px;background:rgba(30,215,96,0.12);color:#1db954;border:1px solid rgba(30,215,96,0.3);">🎵 SP</span>`:''}
+                    ${!hasEmbed?`<span style="font-size:9px;color:var(--text-dim);opacity:0.5;" title="No embed — simulated">◌</span>`:''}
+                    <div style="font-size:11px;color:var(--text-dim);font-family:'Space Mono',monospace;min-width:32px;text-align:right;">${this._esc(dur||'')}</div>
+                  </div>
                 </div>`;
             }).join('')}
           </div>
