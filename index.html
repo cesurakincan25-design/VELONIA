@@ -2412,6 +2412,25 @@ body:has(a:hover) #cursor, body:has(button:hover) #cursor { transform: scale(2);
     </div>
   </div>
 
+  <!-- Now Playing widget — shown only when music is playing -->
+  <div id="now-playing-widget" style="display:none;margin-top:20px;">
+    <div class="glass-card" style="padding:18px 20px;border-color:rgba(176,96,255,0.25);cursor:pointer;" onclick="VELONIA.Router.navigate('music')">
+      <div style="display:flex;align-items:center;gap:14px;">
+        <div id="np-art" style="width:48px;height:48px;border-radius:8px;background:linear-gradient(135deg,var(--neon-purple),#0a0e2e);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;animation:albumSpin 8s linear infinite;">🎵</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:9px;color:var(--neon-purple);letter-spacing:2px;font-family:'Orbitron',monospace;margin-bottom:2px;">▶ NOW PLAYING</div>
+          <div id="np-title" style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">—</div>
+          <div id="np-artist" style="font-size:11px;color:var(--text-secondary);">—</div>
+        </div>
+        <div style="display:flex;gap:8px;flex-shrink:0;">
+          <button onclick="event.stopPropagation();VELONIA.MusicPage.prevTrack()" style="background:none;border:none;color:var(--text-secondary);cursor:pointer;font-size:16px;padding:4px;">⏮</button>
+          <button onclick="event.stopPropagation();togglePlay()" id="np-play-btn" style="width:32px;height:32px;border-radius:50%;background:var(--neon-purple);border:none;color:white;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;">▶</button>
+          <button onclick="event.stopPropagation();VELONIA.MusicPage.nextTrack()" style="background:none;border:none;color:var(--text-secondary);cursor:pointer;font-size:16px;padding:4px;">⏭</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div>
 </div>
 
@@ -2544,10 +2563,19 @@ body:has(a:hover) #cursor, body:has(button:hover) #cursor { transform: scale(2);
   <div class="section-header">
     <div class="section-title">Music <span>System</span></div>
     <div class="section-line"></div>
-    <div class="section-badge">Spotify Mode</div>
+    <div class="section-badge" id="music-badge">Releases</div>
   </div>
 
-  <div class="music-featured" id="music-featured">
+  <!-- Sub-tabs -->
+  <div class="social-tabs" id="music-tabs" style="margin-bottom:24px;">
+    <button class="social-tab active" onclick="VELONIA.MusicPage.switchTab(this,'releases')">💿 All Releases</button>
+    <button class="social-tab" onclick="VELONIA.MusicPage.switchTab(this,'artists')">🎤 By Artist</button>
+    <button class="social-tab" onclick="VELONIA.MusicPage.switchTab(this,'groups')">⭐ By Group</button>
+    <button class="social-tab" onclick="VELONIA.MusicPage.switchTab(this,'timeline')">📅 Timeline</button>
+  </div>
+
+  <!-- Featured banner -->
+  <div class="music-featured" id="music-featured" style="cursor:pointer;" onclick="VELONIA.MusicPage.openAlbumDetail(0)">
     <div class="music-featured-bg"></div>
     <div class="music-featured-art">
       <div class="album-art-placeholder" id="featured-art">🎵</div>
@@ -2556,15 +2584,24 @@ body:has(a:hover) #cursor, body:has(button:hover) #cursor { transform: scale(2);
       <div class="music-featured-label">◉ NOW FEATURED</div>
       <div class="music-featured-title" id="featured-title">NEON DREAMS</div>
       <div class="music-featured-artist" id="featured-artist">G-Diamond · VELONIA Records</div>
-      <button class="btn-play" onclick="playAlbum(0)">▶ Play Album</button>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;">
+        <button class="btn-play" onclick="event.stopPropagation();VELONIA.MusicPage.playFromFeatured()">▶ Play Album</button>
+        <button onclick="event.stopPropagation();VELONIA.MusicPage.openAlbumDetail(0)" style="padding:12px 20px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:30px;color:white;font-size:13px;cursor:pointer;transition:all 0.2s;">ℹ Details</button>
+      </div>
     </div>
   </div>
 
-  <div class="section-header" style="margin-bottom: 20px;">
-    <div class="section-title" style="font-size: 16px;">All <span>Releases</span></div>
-  </div>
-  <div class="album-grid" id="album-grid"></div>
+  <!-- Tab panels -->
+  <div id="mt-releases" class="music-tab-panel"></div>
+  <div id="mt-artists"  class="music-tab-panel" style="display:none;"></div>
+  <div id="mt-groups"   class="music-tab-panel" style="display:none;"></div>
+  <div id="mt-timeline" class="music-tab-panel" style="display:none;"></div>
 </div>
+</div>
+
+<!-- Album Detail Modal -->
+<div id="album-modal-overlay" style="position:fixed;inset:0;z-index:2200;display:none;align-items:flex-start;justify-content:center;background:rgba(5,7,26,0.92);backdrop-filter:blur(16px);overflow-y:auto;padding:40px 20px;" onclick="if(event.target===this)VELONIA.MusicPage.closeAlbumDetail()">
+  <div id="album-modal-content" style="width:100%;max-width:700px;background:var(--navy-mid);border-radius:16px;border:1px solid var(--glass-border);overflow:hidden;animation:modalIn 0.3s cubic-bezier(0.4,0,0.2,1);"></div>
 </div>
 
 <!-- ===== DRAMA ===== -->
@@ -2766,11 +2803,11 @@ body:has(a:hover) #cursor, body:has(button:hover) #cursor { transform: scale(2);
   </div>
   <div class="player-controls">
     <div class="player-btns">
-      <button class="player-btn" title="Shuffle">⇄</button>
-      <button class="player-btn" title="Prev">⏮</button>
+      <button class="player-btn" title="Shuffle" onclick="VELONIA.MusicPage.toggleShuffle(this)">⇄</button>
+      <button class="player-btn" title="Prev" onclick="VELONIA.MusicPage.prevTrack()">⏮</button>
       <button class="player-btn main" id="play-pause-btn" onclick="togglePlay()">▶</button>
-      <button class="player-btn" title="Next">⏭</button>
-      <button class="player-btn" title="Repeat">↻</button>
+      <button class="player-btn" title="Next" onclick="VELONIA.MusicPage.nextTrack()">⏭</button>
+      <button class="player-btn" title="Repeat" onclick="VELONIA.MusicPage.toggleRepeat(this)">↻</button>
     </div>
     <div class="player-progress">
       <span class="player-time" id="player-time-cur">0:00</span>
@@ -3397,6 +3434,8 @@ window.VELONIA = (function() {
         _interval = setInterval(_tick, CONFIG.PLAYER_TICK_MS);
         Notify.toast(`▶ Now playing: ${album.title}`);
         Bus.emit('media:play', album);
+        // Update Now Playing widget on dashboard
+        _updateNowPlayingWidget(album, true);
       },
 
       toggle() {
@@ -3405,6 +3444,8 @@ window.VELONIA = (function() {
           clearInterval(_interval);
           const btn = document.getElementById('play-pause-btn');
           if (btn) btn.textContent = '▶';
+          const npBtn = document.getElementById('np-play-btn');
+          if (npBtn) npBtn.textContent = '▶';
           Bus.emit('media:pause');
         } else {
           if (_current) this.play(_current);
@@ -3865,25 +3906,7 @@ window.VELONIA = (function() {
 
     // ── Music ────────────────────────────────────────────
     music() {
-      const grid = document.getElementById('album-grid'); if (!grid) return;
-      const albums = DAL.albums.all();
-      if (albums.length > 0) {
-        const f = albums[0];
-        const el = id => document.getElementById(id);
-        if(el('featured-title'))  el('featured-title').textContent  = f.title;
-        if(el('featured-artist')) el('featured-artist').textContent = f.artist;
-        if(el('featured-art'))    el('featured-art').textContent    = f.emoji;
-      }
-      grid.innerHTML = albums.map((a, i) => `
-        <div class="album-card" onclick="VELONIA.Actions.playAlbum(${i})">
-          <div class="album-cover" style="background:linear-gradient(135deg,${a.color}44,${a.color}11)">
-            <div class="album-cover-placeholder" style="background:linear-gradient(135deg,${a.color}66,#0a0e2e)">${Utils.esc(a.emoji)}</div>
-            <div class="album-play-overlay"><span style="font-size:24px;color:white;">▶</span></div>
-          </div>
-          <div class="album-title">${Utils.esc(a.title)}</div>
-          <div class="album-artist">${Utils.esc(a.artist)}</div>
-          <div class="album-date">${a.countdown ? '⏳ '+Utils.countdown(a.countdown) : '✓ '+a.year}</div>
-        </div>`).join('');
+      if (window.VELONIA.MusicPage) window.VELONIA.MusicPage.render();
     },
 
     // ── Drama ────────────────────────────────────────────
@@ -4643,6 +4666,21 @@ window.VELONIA = (function() {
     // intentionally empty — v3 dynamic system takes over in boot hook
   }
 
+  /** Update the Now Playing mini-widget on the dashboard */
+  function _updateNowPlayingWidget(album, playing) {
+    const widget = document.getElementById('now-playing-widget');
+    if (!widget) return;
+    if (!album) { widget.style.display = 'none'; return; }
+    widget.style.display = 'block';
+    const art    = document.getElementById('np-art');
+    const title  = document.getElementById('np-title');
+    const artist = document.getElementById('np-artist');
+    const btn    = document.getElementById('np-play-btn');
+    if (art)    { art.textContent = album.emoji || '🎵'; art.style.background = `linear-gradient(135deg,${album.color||'var(--neon-purple)'},#0a0e2e)`; }
+    if (title)  title.textContent  = album._trackTitle || (album.tracks ? album.tracks[0] : album.title);
+    if (artist) artist.textContent = album.artist || album.group || '';
+    if (btn)    btn.textContent    = playing ? '⏸' : '▶';
+  }
 
   // ── 2o · PARTICLES & VISUAL SYSTEMS ──────────────────────
   function _initParticles() {
@@ -7448,6 +7486,10 @@ window.VELONIA.App.boot = async function() {
   window.VELONIA.Router.register('social', () => SocialPage.render());
   window.switchSocialTab = (btn, tab) => SocialPage.switchTab(btn, tab);
 
+  // Register MusicPage
+  window.VELONIA.MusicPage = MusicPage;
+  window.VELONIA.Router.register('music', () => MusicPage.render());
+
   // Update legacy shim
   window.filterChars = (btn) => CharPage.filter(btn, btn.dataset.filter);
 
@@ -8020,6 +8062,417 @@ window.VELONIA.GrpPage = GrpPage;
 // ─────────────────────────────────────────────────────────────────
 //  SOCIAL PAGE MODULE v5
 // ─────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────
+//  MUSIC PAGE MODULE — Phase 6
+//  Releases · By Artist · By Group · Timeline
+//  Album Detail Modal · Tracklist · Prev/Next · Shuffle/Repeat
+// ─────────────────────────────────────────────────────────────────
+const MusicPage = {
+  _activeTab:    'releases',
+  _currentAlbumIdx: 0,    // index in albums array for player
+  _currentTrackIdx: 0,    // index within current album's tracklist
+  _shuffle: false,
+  _repeat:  false,
+
+  // ── Helpers ──────────────────────────────────────────
+  _esc(s) { return window.VELONIA.Utils.esc(s); },
+  _albums()  { return window.VELONIA.DAL.albums.all(); },
+  _state()   { return window.VELONIA.State.get(); },
+
+  _albumCover(a, size=160) {
+    const color = a.color || '#b060ff';
+    return a.coverUrl
+      ? `<img src="${this._esc(a.coverUrl)}" style="width:${size}px;height:${size}px;object-fit:cover;border-radius:8px;" onerror="this.style.display='none'">`
+      : `<div style="width:${size}px;height:${size}px;border-radius:8px;background:linear-gradient(135deg,${color}66,#0a0e2e);display:flex;align-items:center;justify-content:center;font-size:${size*0.3}px;">${this._esc(a.emoji||'💿')}</div>`;
+  },
+
+  // ── Main render ──────────────────────────────────────
+  render() {
+    const albums = this._albums();
+    const badge  = document.getElementById('music-badge');
+    if (badge) badge.textContent = `${albums.length} Releases`;
+
+    // Update featured banner
+    if (albums.length > 0) {
+      const f  = albums[0];
+      const el = id => document.getElementById(id);
+      if (el('featured-title'))  el('featured-title').textContent  = f.title;
+      if (el('featured-artist')) el('featured-artist').textContent = f.artist || f.group || '';
+      if (el('featured-art')) {
+        el('featured-art').textContent = f.emoji || '💿';
+        el('featured-art').style.background = `linear-gradient(135deg,${f.color||'#b060ff'}66,#0a0e2e)`;
+      }
+      // Set featured banner click to album 0
+      const feat = document.getElementById('music-featured');
+      if (feat) feat.onclick = () => this.openAlbumDetail(albums[0].id);
+    }
+    this.switchTab(
+      document.querySelector('#music-tabs .social-tab.active') || document.querySelector('#music-tabs .social-tab'),
+      this._activeTab
+    );
+  },
+
+  switchTab(btn, tab) {
+    this._activeTab = tab;
+    document.querySelectorAll('#music-tabs .social-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.music-tab-panel').forEach(p => p.style.display = 'none');
+    if (btn) btn.classList.add('active');
+    const panel = document.getElementById(`mt-${tab}`);
+    if (panel) panel.style.display = 'block';
+    const map = {
+      releases: () => this._renderReleases(),
+      artists:  () => this._renderByArtist(),
+      groups:   () => this._renderByGroup(),
+      timeline: () => this._renderTimeline(),
+    };
+    if (map[tab]) map[tab]();
+  },
+
+  // ── Releases tab ─────────────────────────────────────
+  _renderReleases() {
+    const el = document.getElementById('mt-releases'); if (!el) return;
+    const albums = this._albums();
+    if (!albums.length) {
+      el.innerHTML = `<div style="text-align:center;padding:60px;color:var(--text-secondary);">
+        <div style="font-size:48px;margin-bottom:16px;">💿</div>
+        <div style="font-family:'Orbitron',monospace;font-size:14px;">No albums yet</div>
+        <div style="font-size:12px;color:var(--text-dim);margin-top:8px;">Add albums in Admin → Albums</div>
+      </div>`;
+      return;
+    }
+    el.innerHTML = `
+      <div class="section-header" style="margin-bottom:16px;">
+        <div class="section-title" style="font-size:16px;">All <span>Releases</span></div>
+      </div>
+      <div class="album-grid">
+        ${albums.map(a => this._albumCard(a)).join('')}
+      </div>`;
+  },
+
+  _albumCard(a) {
+    const color   = a.color || '#b060ff';
+    const isNew   = a.countdown && new Date(a.countdown) > new Date();
+    const nowPlay = window.VELONIA.MediaManager.current();
+    const playing = nowPlay?.id === a.id && window.VELONIA.MediaManager.isPlaying();
+    return `
+      <div class="album-card${playing?' now-playing':''}" onclick="VELONIA.MusicPage.openAlbumDetail(${a.id})"
+        style="${playing?`border-color:${color};box-shadow:0 0 20px ${color}44;`:''}"
+        onmouseenter="this.style.borderColor='${color}55'" onmouseleave="this.style.borderColor='${playing?color:'rgba(176,96,255,0.18)'}'">
+        <div class="album-cover" style="background:linear-gradient(135deg,${color}44,${color}11)">
+          ${a.coverUrl
+            ? `<img src="${this._esc(a.coverUrl)}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">`
+            : `<div class="album-cover-placeholder" style="background:linear-gradient(135deg,${color}66,#0a0e2e)">${this._esc(a.emoji||'💿')}</div>`}
+          <div class="album-play-overlay" onclick="event.stopPropagation();VELONIA.MusicPage.playAlbumById(${a.id})">
+            <span style="font-size:28px;color:white;">${playing?'⏸':'▶'}</span>
+          </div>
+          ${playing?`<div style="position:absolute;top:6px;left:6px;padding:2px 8px;background:${color};border-radius:4px;font-size:9px;font-family:'Orbitron',monospace;color:white;letter-spacing:1px;">▶ NOW</div>`:''}
+          ${isNew?`<div style="position:absolute;top:6px;right:6px;padding:2px 8px;background:rgba(0,229,255,0.8);border-radius:4px;font-size:9px;font-family:'Orbitron',monospace;color:var(--deep-navy);">⏳ SOON</div>`:''}
+        </div>
+        <div class="album-title">${this._esc(a.title)}</div>
+        <div class="album-artist" style="display:flex;align-items:center;gap:6px;">
+          <span>${this._esc(a.artist || a.group || '')}</span>
+          ${a.albumType?`<span style="font-size:9px;padding:1px 6px;border-radius:4px;background:${color}18;color:${color};border:1px solid ${color}33;">${a.albumType}</span>`:''}
+        </div>
+        <div class="album-date">
+          ${isNew ? '⏳ ' + window.VELONIA.Utils.countdown(a.countdown) : '✓ ' + (a.year||'')}
+        </div>
+        <div style="font-size:10px;color:var(--text-dim);margin-top:4px;">${(a.songs||[]).length} tracks</div>
+      </div>`;
+  },
+
+  // ── By Artist tab ─────────────────────────────────────
+  _renderByArtist() {
+    const el = document.getElementById('mt-artists'); if (!el) return;
+    const albums = this._albums();
+    const state  = this._state();
+    // Group by characterIds or artist string
+    const artistMap = {};
+    albums.forEach(a => {
+      const chars = (a.characterIds||[]).map(id=>(state.characters||[]).find(c=>c.id==id)).filter(Boolean);
+      if (chars.length > 0) {
+        chars.forEach(c => {
+          if (!artistMap[c.id]) artistMap[c.id] = { char:c, albums:[] };
+          artistMap[c.id].albums.push(a);
+        });
+      } else {
+        const key = a.artist || a.group || 'Unknown';
+        if (!artistMap[key]) artistMap[key] = { name:key, albums:[] };
+        artistMap[key].albums.push(a);
+      }
+    });
+
+    el.innerHTML = Object.values(artistMap).map(entry => {
+      const name  = entry.char?.name || entry.name || '?';
+      const emoji = entry.char?.emoji || '🎤';
+      const img   = entry.char?.imgUrls?.[0] || entry.char?.imgUrl || '';
+      return `
+        <div style="margin-bottom:36px;">
+          <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid rgba(255,255,255,0.06);">
+            <div style="width:48px;height:48px;border-radius:50%;overflow:hidden;background:linear-gradient(135deg,var(--navy-light),#1a0540);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">
+              ${img?`<img src="${this._esc(img)}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">`:''}
+              <span style="${img?'display:none':''}">${this._esc(emoji)}</span>
+            </div>
+            <div>
+              <div style="font-family:'Orbitron',monospace;font-size:15px;font-weight:700;">${this._esc(name)}</div>
+              <div style="font-size:11px;color:var(--text-secondary);">${entry.albums.length} release${entry.albums.length!==1?'s':''}</div>
+            </div>
+            ${entry.char?`<button onclick="VELONIA.Actions.openProfile(${entry.char.id})" style="margin-left:auto;padding:6px 14px;background:rgba(176,96,255,0.15);border:1px solid rgba(176,96,255,0.3);border-radius:20px;color:var(--neon-purple);font-size:10px;cursor:pointer;font-family:'Orbitron',monospace;">VIEW PROFILE</button>`:''}
+          </div>
+          <div class="album-grid">${entry.albums.map(a=>this._albumCard(a)).join('')}</div>
+        </div>`;
+    }).join('') || `<div style="text-align:center;padding:40px;color:var(--text-dim);">No artist data — assign characters to albums in Admin</div>`;
+  },
+
+  // ── By Group tab ──────────────────────────────────────
+  _renderByGroup() {
+    const el = document.getElementById('mt-groups'); if (!el) return;
+    const albums = this._albums();
+    const state  = this._state();
+    const groupMap = {};
+    albums.forEach(a => {
+      const grp = a.groupId ? (state.groups||[]).find(g=>g.id==a.groupId) : null;
+      const key  = grp ? grp.id : (a.group || a.artist || 'Solo/Other');
+      if (!groupMap[key]) groupMap[key] = { group:grp, name: grp?.name||a.group||a.artist||'Solo/Other', emoji:grp?.emoji||'💿', color:grp?.color||a.color||'#b060ff', albums:[] };
+      groupMap[key].albums.push(a);
+    });
+
+    el.innerHTML = Object.values(groupMap).map(entry => {
+      const color = entry.color||'#b060ff';
+      return `
+        <div style="margin-bottom:36px;">
+          <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid ${color}33;">
+            <div style="width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,${color}44,${color}11);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;">${this._esc(entry.emoji)}</div>
+            <div>
+              <div style="font-family:'Orbitron',monospace;font-size:15px;font-weight:700;color:${color}">${this._esc(entry.name)}</div>
+              <div style="font-size:11px;color:var(--text-secondary);">${entry.albums.length} release${entry.albums.length!==1?'s':''}</div>
+            </div>
+          </div>
+          <div class="album-grid">${entry.albums.map(a=>this._albumCard(a)).join('')}</div>
+        </div>`;
+    }).join('') || `<div style="text-align:center;padding:40px;color:var(--text-dim);">No groups yet</div>`;
+  },
+
+  // ── Timeline tab ──────────────────────────────────────
+  _renderTimeline() {
+    const el = document.getElementById('mt-timeline'); if (!el) return;
+    const albums = [...this._albums()].sort((a,b)=>(b.year||0)-(a.year||0));
+    const byYear = {};
+    albums.forEach(a => {
+      const y = a.countdown && new Date(a.countdown)>new Date() ? 'Upcoming' : (a.year||'Unknown');
+      if (!byYear[y]) byYear[y]=[];
+      byYear[y].push(a);
+    });
+
+    el.innerHTML = Object.entries(byYear).map(([year, albs]) => `
+      <div style="margin-bottom:32px;display:flex;gap:20px;">
+        <div style="flex-shrink:0;text-align:right;width:80px;">
+          <div style="font-family:'Orbitron',monospace;font-size:14px;font-weight:700;color:${year==='Upcoming'?'var(--neon-cyan)':'var(--neon-purple)'};">${this._esc(String(year))}</div>
+          <div style="font-size:10px;color:var(--text-dim);">${albs.length} rel.</div>
+        </div>
+        <div style="flex:1;border-left:2px solid ${year==='Upcoming'?'rgba(0,229,255,0.3)':'rgba(176,96,255,0.2)'};padding-left:20px;">
+          <div class="album-grid" style="grid-template-columns:repeat(auto-fill,minmax(150px,1fr));">
+            ${albs.map(a=>this._albumCard(a)).join('')}
+          </div>
+        </div>
+      </div>`).join('') || `<div style="text-align:center;padding:40px;color:var(--text-dim);">No albums to display</div>`;
+  },
+
+  // ── Album Detail Modal ─────────────────────────────────
+  openAlbumDetail(albumId) {
+    const albums = this._albums();
+    const a      = albums.find(x=>x.id==albumId) || albums[albumId]; // fallback index
+    if (!a) return;
+    const state   = this._state();
+    const color   = a.color || '#b060ff';
+    const chars   = (a.characterIds||[]).map(id=>(state.characters||[]).find(c=>c.id==id)).filter(Boolean);
+    const grp     = a.groupId ? (state.groups||[]).find(g=>g.id==a.groupId) : null;
+    const isNew   = a.countdown && new Date(a.countdown)>new Date();
+    const songs   = a.songs || [];
+    const nowPlay = window.VELONIA.MediaManager.current();
+    const playing = nowPlay?.id === a.id && window.VELONIA.MediaManager.isPlaying();
+
+    const modal = document.getElementById('album-modal-content');
+    modal.innerHTML = `
+      <!-- Header -->
+      <div style="background:linear-gradient(135deg,${color}33,${color}11);padding:28px 28px 20px;position:relative;">
+        <button onclick="VELONIA.MusicPage.closeAlbumDetail()" style="position:absolute;top:14px;right:14px;background:rgba(5,7,26,0.7);border:1px solid rgba(255,255,255,0.15);color:white;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;">✕</button>
+        <div style="display:flex;gap:20px;align-items:flex-end;">
+          <div style="flex-shrink:0;">${this._albumCover(a, 120)}</div>
+          <div style="flex:1;min-width:0;">
+            ${a.albumType?`<div style="font-size:9px;letter-spacing:2px;color:${color};font-family:'Orbitron',monospace;margin-bottom:4px;">${this._esc(a.albumType.toUpperCase())}</div>`:''}
+            <div style="font-family:'Orbitron',monospace;font-size:22px;font-weight:900;margin-bottom:4px;color:white;">${this._esc(a.title)}</div>
+            <div style="font-size:13px;color:var(--text-secondary);margin-bottom:8px;">${this._esc(a.artist||a.group||'')}</div>
+            <div style="display:flex;gap:16px;font-size:11px;color:var(--text-dim);margin-bottom:14px;">
+              <span>${isNew?`⏳ ${window.VELONIA.Utils.countdown(a.countdown)}`:`📅 ${a.year||'?'}`}</span>
+              <span>🎵 ${songs.length} tracks</span>
+              ${grp?`<span>⭐ ${this._esc(grp.name)}</span>`:''}
+            </div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;">
+              <button onclick="VELONIA.MusicPage.playAlbumById(${a.id})" style="padding:10px 22px;background:${playing?'rgba(0,229,255,0.2)':color};border:none;border-radius:24px;color:white;font-size:12px;font-family:'Orbitron',monospace;cursor:pointer;letter-spacing:1px;transition:all 0.2s;">
+                ${playing?'⏸ PLAYING':'▶ PLAY'}
+              </button>
+              ${songs.length>0?`<button onclick="VELONIA.MusicPage._playTrack(${a.id},0)" style="padding:10px 18px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:24px;color:white;font-size:12px;cursor:pointer;">▶ Play from Start</button>`:''}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tracklist -->
+      ${songs.length > 0 ? `
+        <div style="padding:20px 28px;">
+          <div style="font-size:10px;color:var(--text-secondary);letter-spacing:2px;font-family:'Orbitron',monospace;margin-bottom:14px;">TRACKLIST</div>
+          <div id="album-tracklist">
+            ${songs.map((s, si) => {
+              const isTitle = s.isTitle || (typeof s === 'string' && si === 0);
+              const title   = typeof s === 'string' ? s : (s.title || s);
+              const dur     = typeof s === 'object' ? s.duration : '';
+              const feat    = typeof s === 'object' ? s.featuring : '';
+              const nowT    = playing && window.VELONIA.MusicPage._currentTrackIdx === si;
+              return `
+                <div onclick="VELONIA.MusicPage._playTrack(${a.id},${si})"
+                  style="display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:8px;cursor:pointer;transition:all 0.2s;background:${nowT?`${color}18`:'transparent'};"
+                  onmouseenter="this.style.background='rgba(255,255,255,0.05)'"
+                  onmouseleave="this.style.background='${nowT?color+'18':'transparent'}'">
+                  <div style="width:20px;text-align:center;font-size:11px;color:${nowT?color:'var(--text-dim)'};">${nowT?'▶':si+1}</div>
+                  <div style="flex:1;min-width:0;">
+                    <div style="font-size:13px;font-weight:${isTitle?'700':'400'};color:${isTitle?color:'var(--text-primary)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                      ${this._esc(title)}${isTitle?` <span style="font-size:9px;background:${color}33;color:${color};padding:1px 5px;border-radius:3px;margin-left:4px;">TITLE</span>`:''}
+                    </div>
+                    ${feat?`<div style="font-size:10px;color:var(--text-dim);">feat. ${this._esc(feat)}</div>`:''}
+                  </div>
+                  <div style="font-size:11px;color:var(--text-dim);font-family:'Space Mono',monospace;">${this._esc(dur||'')}</div>
+                </div>`;
+            }).join('')}
+          </div>
+        </div>` : `
+        <div style="padding:20px 28px;">
+          <div style="font-size:10px;color:var(--text-secondary);letter-spacing:2px;font-family:'Orbitron',monospace;margin-bottom:14px;">TRACKLIST</div>
+          <div style="color:var(--text-dim);font-size:13px;">No tracks added yet. Edit this album in Admin to add songs.</div>
+        </div>`}
+
+      <!-- Artists/Description -->
+      ${chars.length > 0 ? `
+        <div style="padding:0 28px 20px;">
+          <div style="font-size:10px;color:var(--text-secondary);letter-spacing:2px;font-family:'Orbitron',monospace;margin-bottom:12px;">ARTISTS</div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            ${chars.map(c=>{
+              const img=c.imgUrls?.[0]||c.imgUrl||'';
+              return `<div onclick="VELONIA.MusicPage.closeAlbumDetail();VELONIA.Actions.openProfile(${c.id})"
+                style="display:flex;align-items:center;gap:8px;padding:8px 14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:20px;cursor:pointer;transition:all 0.2s;"
+                onmouseenter="this.style.borderColor='${color}55'" onmouseleave="this.style.borderColor='rgba(255,255,255,0.08)'">
+                <div style="width:28px;height:28px;border-radius:50%;overflow:hidden;background:linear-gradient(135deg,var(--navy-light),#1a0540);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;">
+                  ${img?`<img src="${this._esc(img)}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">`:''}
+                  <span style="${img?'display:none':''}">${this._esc(c.emoji||'⭐')}</span>
+                </div>
+                <span style="font-size:12px;font-weight:600;">${this._esc(c.name)}</span>
+              </div>`;
+            }).join('')}
+          </div>
+        </div>` : ''}
+
+      ${a.description?`<div style="padding:0 28px 20px;font-size:13px;color:var(--text-secondary);line-height:1.7;">${this._esc(a.description)}</div>`:''}
+    `;
+    document.getElementById('album-modal-overlay').style.display='flex';
+  },
+
+  closeAlbumDetail() {
+    document.getElementById('album-modal-overlay').style.display='none';
+  },
+
+  // ── Player controls ───────────────────────────────────
+  playAlbumById(albumId) {
+    const albums = this._albums();
+    const idx    = albums.findIndex(a=>a.id==albumId);
+    if (idx < 0) return;
+    this._currentAlbumIdx = idx;
+    this._currentTrackIdx = 0;
+    window.VELONIA.MediaManager.play(albums[idx]);
+    this.render();
+    this.closeAlbumDetail();
+    // Reopen with playing state
+    setTimeout(() => this.openAlbumDetail(albumId), 50);
+  },
+
+  playFromFeatured() {
+    const albums = this._albums();
+    if (!albums.length) return;
+    this.playAlbumById(albums[0].id);
+  },
+
+  _playTrack(albumId, trackIdx) {
+    const albums = this._albums();
+    const idx    = albums.findIndex(a=>a.id==albumId);
+    if (idx < 0) return;
+    const album  = albums[idx];
+    this._currentAlbumIdx = idx;
+    this._currentTrackIdx = trackIdx;
+    const songs  = album.songs || [];
+    const song   = songs[trackIdx];
+    const title  = typeof song === 'string' ? song : (song?.title || song || album.title);
+    // Play with track title override
+    const albumForPlayer = { ...album, _trackTitle: title, _trackIdx: trackIdx };
+    window.VELONIA.MediaManager.play(albumForPlayer);
+    // Update player title
+    const titleEl = document.getElementById('player-title');
+    if (titleEl) titleEl.textContent = title;
+    // Re-render tracklist highlight
+    this.openAlbumDetail(albumId);
+  },
+
+  nextTrack() {
+    const albums = this._albums();
+    const album  = albums[this._currentAlbumIdx];
+    if (!album) return;
+    const songs = album.songs || [];
+    if (songs.length > 0) {
+      const next = this._shuffle
+        ? Math.floor(Math.random() * songs.length)
+        : (this._currentTrackIdx + 1) % songs.length;
+      this._playTrack(album.id, next);
+    } else {
+      // No tracklist — go to next album
+      const nextIdx = (this._currentAlbumIdx + 1) % albums.length;
+      this._currentAlbumIdx = nextIdx;
+      this._currentTrackIdx = 0;
+      window.VELONIA.MediaManager.play(albums[nextIdx]);
+    }
+  },
+
+  prevTrack() {
+    const albums = this._albums();
+    const album  = albums[this._currentAlbumIdx];
+    if (!album) return;
+    const songs = album.songs || [];
+    if (songs.length > 0) {
+      const prev = this._currentTrackIdx > 0 ? this._currentTrackIdx - 1 : songs.length - 1;
+      this._playTrack(album.id, prev);
+    } else {
+      const prevIdx = this._currentAlbumIdx > 0 ? this._currentAlbumIdx - 1 : albums.length - 1;
+      this._currentAlbumIdx = prevIdx;
+      window.VELONIA.MediaManager.play(albums[prevIdx]);
+    }
+  },
+
+  toggleShuffle(btn) {
+    this._shuffle = !this._shuffle;
+    if (btn) {
+      btn.style.color  = this._shuffle ? 'var(--neon-cyan)' : '';
+      btn.style.textShadow = this._shuffle ? '0 0 10px var(--neon-cyan)' : '';
+    }
+    window.VELONIA.Notify.toast(this._shuffle ? '🔀 Shuffle ON' : '🔀 Shuffle OFF');
+  },
+
+  toggleRepeat(btn) {
+    this._repeat = !this._repeat;
+    if (btn) {
+      btn.style.color  = this._repeat ? 'var(--neon-purple)' : '';
+      btn.style.textShadow = this._repeat ? '0 0 10px var(--neon-purple)' : '';
+    }
+    window.VELONIA.Notify.toast(this._repeat ? '🔁 Repeat ON' : '🔁 Repeat OFF');
+  },
+};
+window.VELONIA.MusicPage = MusicPage;
+
 const SocialPage = {
   _activeTab: 'feed',
   _likedPosts: new Set(),
@@ -9127,19 +9580,21 @@ const ROADMAP_DATA = [
     ]
   },
   {
-    phase: 6, title: 'MUSIC SYSTEM — Spotify Mode Upgrade', sub: 'SIRADAM — Sonraki geliştirme', color: '#1db954',
-    status: 'active',
+    phase: 6, title: 'MUSIC SYSTEM — Spotify Mode Upgrade', sub: 'Tamamlandı — v12', color: '#1db954',
+    status: 'done',
     items: [
-      { icon:'📋', title:'Album — Songs Listesi',              desc:'Her albümde şarkı listesi, title track işareti, süre', status:'planned' },
-      { icon:'📋', title:'Album Detail Modal',                 desc:'Tracklist, artist linkleri, yayın tarihi, yorum',     status:'planned' },
-      { icon:'📋', title:'Player Bar — Song Navigation',       desc:'Önceki/sonraki şarkı, album içi navigasyon',          status:'planned' },
-      { icon:'📋', title:'Now Playing — Mini Widget',          desc:'Dashboard\'da anlık çalan şarkı widget\'ı',           status:'planned' },
-      { icon:'📋', title:'Discography Sayfası (per group/char)',desc:'Karakter/grup bazlı tüm release\'ler',               status:'planned' },
+      { icon:'✅', title:'Album Detail Modal — Tracklist',      desc:'Her albümde tıklanabilir şarkı listesi, title track badge, süre, feat.',     status:'done' },
+      { icon:'✅', title:'Album — Track Playback',              desc:'Şarkıya tıkla → player bar\'da o şarkı açılır, tracklist highlight',        status:'done' },
+      { icon:'✅', title:'Player Bar — Prev/Next + Shuffle/Repeat', desc:'⏮⏭ çalışır, shuffle random track, repeat toggle, renk feedback',       status:'done' },
+      { icon:'✅', title:'Now Playing — Dashboard Widget',      desc:'Dashboard\'da mini widget: sanat, şarkı adı, sanatçı, ⏮▶⏭ butonları',    status:'done' },
+      { icon:'✅', title:'Discography — By Artist + By Group',  desc:'Sanatçı bazlı ve grup bazlı sekmeleri, karakter profil linki',              status:'done' },
+      { icon:'✅', title:'Timeline Sekmesi',                    desc:'Yıl bazlı timeline görünümü, Upcoming ayrı bölüm',                         status:'done' },
+      { icon:'✅', title:'Album Kartı — Now Playing Badge',     desc:'Çalan albüm kartında ▶ NOW badge ve renkli border',                        status:'done' },
     ]
   },
   {
-    phase: 7, title: 'DRAMA & EPISODES', sub: 'Phase 6 bittikten sonra', color: '#ff6b35',
-    status: 'planned',
+    phase: 7, title: 'DRAMA & EPISODES', sub: 'SIRADAM — Sonraki geliştirme', color: '#ff6b35',
+    status: 'active',
     items: [
       { icon:'📋', title:'Drama Detail Modal — Episode List', desc:'Bölüm listesi, air date, rating, synopsis',           status:'planned' },
       { icon:'📋', title:'Cast Linkleri',                     desc:'Drama sayfasından karakter profiline tıkla',           status:'planned' },
