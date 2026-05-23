@@ -8055,7 +8055,8 @@ const SocialPage = {
     const pColor=this._pColors[platform]||'#607d8b';
     const handle=acc?'@'+acc.handle:(char?.name||p.char||'Unknown');
     const liked=this._likedPosts.has(p.id);
-    const likes=parseInt(p.likes)||0;
+    // Keep original string format (e.g. "248k") — don't parseInt
+    const likesDisplay = p.likes || '0';
     return `
       <div class="feed-post" onclick="VELONIA.SocialPage.openPostDetail(${p.id})">
         <div class="feed-post-header">
@@ -8074,12 +8075,12 @@ const SocialPage = {
           ${(p.content||p.caption)?`<div class="feed-post-caption">${this._esc((p.content||p.caption||'').substring(0,200))}${(p.content||p.caption||'').length>200?'…':''}</div>`:''}
           <div class="feed-post-stats">
             <button class="feed-stat-btn${liked?' liked':''}" onclick="event.stopPropagation();VELONIA.SocialPage.toggleLike(${p.id},this)">
-              ${liked?'❤':'🤍'} <span>${liked?likes+1:likes}</span>
+              ${liked?'❤':'🤍'} <span>${likesDisplay}</span>
             </button>
             <button class="feed-stat-btn" onclick="event.stopPropagation();VELONIA.SocialPage.openPostDetail(${p.id})">
-              💬 <span>${(p.commentThread||[]).length||p.comments||0}</span>
+              💬 <span>${(p.commentThread||[]).length || p.comments || 0}</span>
             </button>
-            ${p.views?`<span style="color:var(--text-dim);font-size:12px;">👁 ${this._esc(p.views)}</span>`:''}
+            ${p.views&&p.views!=='0'?`<span style="color:var(--text-dim);font-size:12px;">👁 ${this._esc(p.views)}</span>`:''}
             <span style="margin-left:auto;font-size:10px;color:var(--text-dim);">${(p.tags||[]).slice(0,2).map(t=>'#'+this._esc(t)).join(' ')}</span>
           </div>
         </div>
@@ -8090,9 +8091,10 @@ const SocialPage = {
     this._likedPosts.has(postId)?this._likedPosts.delete(postId):this._likedPosts.add(postId);
     const liked=this._likedPosts.has(postId);
     const p=(window.VELONIA.State.read('posts')||[]).find(x=>x.id==postId);
-    const likes=parseInt(p?.likes)||0;
+    // Keep original string format unchanged (248k stays 248k)
+    const likesDisplay = p?.likes || '0';
     btn.classList.toggle('liked',liked);
-    btn.innerHTML=`${liked?'❤':'🤍'} <span>${liked?likes+1:likes}</span>`;
+    btn.innerHTML=`${liked?'❤':'🤍'} <span>${likesDisplay}</span>`;
     window.VELONIA.Notify.toast(liked?'❤ Liked!':'💔 Unliked');
   },
 
@@ -8203,6 +8205,10 @@ const SocialPage = {
         <div class="bubble-header">
           <div class="bubble-avatar">${img?`<img src="${this._esc(img)}" onerror="this.style.display='none'">`:''}<span style="${img?'display:none':''}">${this._esc(emoji)}</span></div>
           <div style="flex:1;"><div class="bubble-name">${this._esc(bm.char)}</div><div class="bubble-status">● Online — Bubble Exclusive</div></div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button onclick="event.stopPropagation();VELONIA.SocialPage._openBubbleComposer()" style="padding:4px 10px;background:rgba(176,96,255,0.15);border:1px solid rgba(176,96,255,0.3);border-radius:6px;color:var(--neon-purple);font-size:10px;cursor:pointer;font-family:'Orbitron',monospace;">+ MSG</button>
+            <button onclick="event.stopPropagation();VELONIA.SocialPage.openBubbleEditor(${bi})" style="padding:4px 10px;background:rgba(0,229,255,0.1);border:1px solid rgba(0,229,255,0.25);border-radius:6px;color:var(--neon-cyan);font-size:10px;cursor:pointer;font-family:'Orbitron',monospace;">✏ EDIT</button>
+          </div>
         </div>
         <div class="bubble-messages" id="bubble-msgs-${bi}">
           ${(bm.messages||[]).map(m=>`
@@ -8304,9 +8310,9 @@ const SocialPage = {
         ${p.title?`<div style="font-size:14px;font-weight:600;margin-bottom:6px;">${this._esc(p.title)}</div>`:''}
         <div style="font-size:13px;color:var(--text-secondary);line-height:1.7;">${this._esc(p.content||p.caption||'')}</div>
         <div style="display:flex;gap:20px;margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.05);">
-          <button class="feed-stat-btn${liked?' liked':''}" onclick="VELONIA.SocialPage.toggleLike(${p.id},this)">${liked?'❤':'🤍'} ${parseInt(p.likes)||0}</button>
+          <button class="feed-stat-btn${liked?' liked':''}" onclick="VELONIA.SocialPage.toggleLike(${p.id},this)">${liked?'❤':'🤍'} ${p.likes||'0'}</button>
           <span style="font-size:12px;color:var(--text-dim);">💬 ${comments.length}</span>
-          ${p.views?`<span style="font-size:12px;color:var(--text-dim);">👁 ${this._esc(p.views)}</span>`:''}
+          ${p.views&&p.views!=='0'?`<span style="font-size:12px;color:var(--text-dim);">👁 ${this._esc(p.views)}</span>`:''}
         </div>
       </div>
       <div style="padding:8px 18px;font-size:10px;color:var(--text-secondary);letter-spacing:2px;font-family:'Orbitron',monospace;border-top:1px solid rgba(255,255,255,0.05);">COMMENTS</div>
@@ -8339,16 +8345,31 @@ const SocialPage = {
 
   closePostDetail() { document.getElementById('post-detail-overlay').style.display='none'; },
 
-  // ── POST COMPOSER ─────────────────────────────────────
-  openComposer() {
-    const state=window.VELONIA.State.get();
-    const accounts=state.socialAccounts||[];
-    const chars=state.characters||[];
-    const platforms=['instagram','youtube','tiktok','weverse','bubble','twitter','threads'];
-    const modal=document.getElementById('composer-modal');
+  // ── POST COMPOSER — platform-aware ───────────────────
+  openComposer(forcePlatform) {
+    // Use forcePlatform arg, or fall back to active tab
+    const platform = forcePlatform || this._activeTab;
+
+    // Bubble gets its own special composer
+    if (platform === 'bubble') {
+      this._openBubbleComposer();
+      return;
+    }
+
+    const state    = window.VELONIA.State.get();
+    const accounts = (state.socialAccounts||[]).filter(a =>
+      platform === 'feed' || a.platform === platform
+    );
+    const allAccounts = state.socialAccounts||[];
+    const chars    = state.characters||[];
+    const platforms= ['instagram','youtube','tiktok','weverse','twitter','threads'];
+    const modal    = document.getElementById('composer-modal');
+
     modal.innerHTML=`
       <div class="composer-header">
-        <div style="font-family:'Orbitron',monospace;font-size:14px;color:var(--neon-purple);">✏ New Post</div>
+        <div style="font-family:'Orbitron',monospace;font-size:14px;color:var(--neon-purple);">
+          ✏ New Post ${platform!=='feed'?'— '+platform.toUpperCase():''}
+        </div>
         <button onclick="VELONIA.SocialPage.closeComposer()" style="background:none;border:none;color:var(--text-secondary);cursor:pointer;font-size:18px;">✕</button>
       </div>
       <div class="composer-body">
@@ -8356,19 +8377,29 @@ const SocialPage = {
           <div style="font-size:12px;color:var(--text-secondary);width:70px;flex-shrink:0;">ACCOUNT</div>
           <select class="form-select" id="comp-account" style="flex:1;" onchange="VELONIA.SocialPage._updateComposerPlatform()">
             <option value="">— Select Account —</option>
-            ${accounts.map(a=>{ const char=chars.find(c=>c.id==a.characterId); return `<option value="${a.id}" data-platform="${this._esc(a.platform)}">${char?.emoji||'📱'} @${this._esc(a.handle)} (${a.platform})</option>`; }).join('')}
+            ${allAccounts.map(a=>{
+              const char=chars.find(c=>c.id==a.characterId);
+              const sel=a.platform===platform||platform==='feed'?' selected':'';
+              return `<option value="${a.id}" data-platform="${this._esc(a.platform)}"${sel}>${char?.emoji||'📱'} @${this._esc(a.handle)} (${a.platform})</option>`;
+            }).join('')}
           </select>
         </div>
         <div class="composer-account-row">
           <div style="font-size:12px;color:var(--text-secondary);width:70px;flex-shrink:0;">PLATFORM</div>
-          <select class="form-select" id="comp-platform" style="flex:1;">${platforms.map(p=>`<option value="${p}">${p}</option>`).join('')}</select>
+          <select class="form-select" id="comp-platform" style="flex:1;">
+            ${platforms.map(p=>`<option value="${p}"${p===platform?' selected':''}>${p}</option>`).join('')}
+          </select>
         </div>
         <div class="composer-account-row">
           <div style="font-size:12px;color:var(--text-secondary);width:70px;flex-shrink:0;">TYPE</div>
-          <select class="form-select" id="comp-type" style="flex:1;">${['photo','video','reel','story','text'].map(t=>`<option value="${t}">${t}</option>`).join('')}</select>
+          <select class="form-select" id="comp-type" style="flex:1;">
+            ${['photo','video','reel','story','text'].map(t=>`<option value="${t}">${t}</option>`).join('')}
+          </select>
         </div>
         <textarea class="composer-textarea" id="comp-content" placeholder="What's on your mind?" oninput="document.getElementById('comp-char-count').textContent=this.value.length+' / 2200'"></textarea>
-        <div style="display:flex;justify-content:flex-end;margin-top:4px;"><span class="composer-char-count" id="comp-char-count">0 / 2200</span></div>
+        <div style="display:flex;justify-content:flex-end;margin-top:4px;">
+          <span class="composer-char-count" id="comp-char-count">0 / 2200</span>
+        </div>
         <div class="composer-toolbar">
           <span style="font-size:11px;color:var(--text-secondary);">Image URL:</span>
           <input class="form-input" id="comp-image" placeholder="https://... (optional)" style="flex:1;font-size:11px;padding:6px 10px;">
@@ -8379,12 +8410,17 @@ const SocialPage = {
           <input class="form-input" id="comp-emoji" value="📸" style="width:50px;font-size:16px;padding:4px 8px;text-align:center;">
         </div>
         <div class="composer-toolbar" style="margin-top:8px;">
+          <span style="font-size:11px;color:var(--text-secondary);">Stats:</span>
+          <input class="form-input" id="comp-likes"   placeholder="Likes (e.g. 248k)"   style="flex:1;font-size:11px;padding:6px 10px;" value="0">
+          <input class="form-input" id="comp-views"   placeholder="Views (YouTube etc)" style="flex:1;font-size:11px;padding:6px 10px;" value="0">
+        </div>
+        <div class="composer-toolbar" style="margin-top:8px;">
           <span style="font-size:11px;color:var(--text-secondary);">Tags:</span>
           <input class="form-input" id="comp-tags" placeholder="tag1, tag2" style="flex:1;font-size:11px;padding:6px 10px;">
         </div>
       </div>
       <div class="composer-footer">
-        <div style="font-size:11px;color:var(--text-secondary);">Appears in Feed + platform tab</div>
+        <div style="font-size:11px;color:var(--text-secondary);">Appears in Feed + ${platform} tab</div>
         <div style="display:flex;gap:8px;">
           <button onclick="VELONIA.SocialPage.closeComposer()" style="padding:8px 16px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:var(--text-secondary);cursor:pointer;font-size:12px;">Cancel</button>
           <button onclick="VELONIA.SocialPage.submitPost()" style="padding:8px 20px;background:var(--neon-purple);border:none;border-radius:6px;color:white;cursor:pointer;font-size:12px;font-family:'Orbitron',monospace;letter-spacing:1px;">POST</button>
@@ -8393,26 +8429,239 @@ const SocialPage = {
     document.getElementById('composer-overlay').style.display='flex';
   },
 
+  // ── BUBBLE COMPOSER — special chat-style UI ───────────
+  _openBubbleComposer() {
+    const state   = window.VELONIA.State.get();
+    const chars   = state.characters||[];
+    const bubbles = state.bubbleMessages||[];
+    const modal   = document.getElementById('composer-modal');
+
+    modal.innerHTML=`
+      <div class="composer-header">
+        <div style="font-family:'Orbitron',monospace;font-size:14px;color:var(--neon-purple);">💬 Bubble Message</div>
+        <button onclick="VELONIA.SocialPage.closeComposer()" style="background:none;border:none;color:var(--text-secondary);cursor:pointer;font-size:18px;">✕</button>
+      </div>
+      <div class="composer-body">
+        <div style="font-size:11px;color:var(--text-secondary);margin-bottom:14px;">Add a new message to an existing Bubble chat, or create a new chat thread.</div>
+
+        <!-- Mode toggle -->
+        <div style="display:flex;gap:8px;margin-bottom:16px;">
+          <button class="composer-tool-btn active" id="bubble-mode-add" onclick="VELONIA.SocialPage._bubbleComposerMode('add')">Add to Existing Chat</button>
+          <button class="composer-tool-btn" id="bubble-mode-new"  onclick="VELONIA.SocialPage._bubbleComposerMode('new')">New Chat Thread</button>
+        </div>
+
+        <!-- Add to existing -->
+        <div id="bubble-section-add">
+          <div class="composer-account-row">
+            <div style="font-size:12px;color:var(--text-secondary);width:70px;flex-shrink:0;">CHAT</div>
+            <select class="form-select" id="bubble-chat-select" style="flex:1;">
+              <option value="">— Select Chat —</option>
+              ${bubbles.map((bm,i)=>{
+                const char=chars.find(c=>c.name===bm.char);
+                return `<option value="${i}">${char?.emoji||'💬'} ${this._esc(bm.char)}</option>`;
+              }).join('')}
+              ${bubbles.length===0?'<option disabled>No chats yet — create one below</option>':''}
+            </select>
+          </div>
+          <div class="composer-account-row">
+            <div style="font-size:12px;color:var(--text-secondary);width:70px;flex-shrink:0;">TYPE</div>
+            <select class="form-select" id="bubble-msg-type" style="flex:1;">
+              <option value="idol">🎤 Artist message</option>
+              <option value="fan">💜 Fan message</option>
+            </select>
+          </div>
+          <textarea class="composer-textarea" id="bubble-msg-text" placeholder="Message text..."></textarea>
+          <div class="composer-account-row" style="margin-top:10px;">
+            <div style="font-size:12px;color:var(--text-secondary);width:70px;flex-shrink:0;">TIME</div>
+            <input class="form-input" id="bubble-msg-time" value="${new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})}" style="flex:1;">
+          </div>
+        </div>
+
+        <!-- New chat thread -->
+        <div id="bubble-section-new" style="display:none;">
+          <div class="composer-account-row">
+            <div style="font-size:12px;color:var(--text-secondary);width:70px;flex-shrink:0;">CHARACTER</div>
+            <select class="form-select" id="bubble-new-char" style="flex:1;">
+              <option value="">— Select Character —</option>
+              ${chars.map(c=>`<option value="${this._esc(c.name)}">${c.emoji||'⭐'} ${this._esc(c.name)}</option>`).join('')}
+            </select>
+          </div>
+          <textarea class="composer-textarea" id="bubble-new-text" placeholder="First message from the artist..."></textarea>
+        </div>
+      </div>
+      <div class="composer-footer">
+        <div style="font-size:11px;color:var(--text-secondary);">Saved to Bubble tab</div>
+        <div style="display:flex;gap:8px;">
+          <button onclick="VELONIA.SocialPage.closeComposer()" style="padding:8px 16px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:var(--text-secondary);cursor:pointer;font-size:12px;">Cancel</button>
+          <button onclick="VELONIA.SocialPage.submitBubbleMessage()" style="padding:8px 20px;background:var(--neon-purple);border:none;border-radius:6px;color:white;cursor:pointer;font-size:12px;font-family:'Orbitron',monospace;letter-spacing:1px;">SEND</button>
+        </div>
+      </div>`;
+    document.getElementById('composer-overlay').style.display='flex';
+  },
+
+  _bubbleComposerMode(mode) {
+    document.getElementById('bubble-section-add').style.display = mode==='add'?'block':'none';
+    document.getElementById('bubble-section-new').style.display = mode==='new'?'block':'none';
+    document.getElementById('bubble-mode-add').classList.toggle('active', mode==='add');
+    document.getElementById('bubble-mode-new').classList.toggle('active', mode==='new');
+  },
+
+  submitBubbleMessage() {
+    const state   = window.VELONIA.State.get();
+    const bubbles = [...(state.bubbleMessages||[])];
+    const addSec  = document.getElementById('bubble-section-add');
+    const isAdd   = addSec && addSec.style.display !== 'none';
+
+    if (isAdd) {
+      // Add message to existing chat
+      const idx  = parseInt(document.getElementById('bubble-chat-select')?.value);
+      const text = document.getElementById('bubble-msg-text')?.value.trim();
+      const type = document.getElementById('bubble-msg-type')?.value || 'idol';
+      const time = document.getElementById('bubble-msg-time')?.value || '';
+      if (isNaN(idx) || !text) { window.VELONIA.Notify.error('❌ Select a chat and enter a message'); return; }
+      if (!bubbles[idx]) { window.VELONIA.Notify.error('❌ Chat not found'); return; }
+      bubbles[idx].messages.push({ type, text, time });
+      window.VELONIA.State.set('bubbleMessages', bubbles);
+    } else {
+      // New chat thread
+      const charName = document.getElementById('bubble-new-char')?.value;
+      const text     = document.getElementById('bubble-new-text')?.value.trim();
+      if (!charName || !text) { window.VELONIA.Notify.error('❌ Select a character and enter a message'); return; }
+      const time = new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+      bubbles.push({
+        id:    window.VELONIA.Utils.newId(),
+        _meta: window.VELONIA.Utils.meta(),
+        char:  charName,
+        messages: [{ type:'idol', text, time }]
+      });
+      window.VELONIA.State.set('bubbleMessages', bubbles);
+    }
+
+    window.VELONIA.App.save();
+    this.closeComposer();
+    this._renderBubble();
+    window.VELONIA.Notify.success('💬 Bubble message sent!');
+  },
+
+  // ── BUBBLE EDIT — edit/delete messages in a chat ─────
+  openBubbleEditor(chatIdx) {
+    const state   = window.VELONIA.State.get();
+    const bubbles = state.bubbleMessages||[];
+    const bm      = bubbles[chatIdx]; if (!bm) return;
+    const chars   = state.characters||[];
+    const char    = chars.find(c=>c.name===bm.char);
+    const modal   = document.getElementById('composer-modal');
+
+    modal.innerHTML=`
+      <div class="composer-header">
+        <div style="font-family:'Orbitron',monospace;font-size:14px;color:var(--neon-cyan);">
+          ✏ Edit Bubble — ${char?.emoji||'💬'} ${this._esc(bm.char)}
+        </div>
+        <button onclick="VELONIA.SocialPage.closeComposer()" style="background:none;border:none;color:var(--text-secondary);cursor:pointer;font-size:18px;">✕</button>
+      </div>
+      <div style="padding:16px 20px;max-height:60vh;overflow-y:auto;" id="bubble-editor-list">
+        ${bm.messages.map((m,mi)=>`
+          <div id="bmsg-${chatIdx}-${mi}" style="display:flex;gap:8px;margin-bottom:10px;padding:10px 12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:10px;">
+            <select style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:6px;color:white;padding:4px 8px;font-size:11px;flex-shrink:0;" id="bmsg-type-${chatIdx}-${mi}">
+              <option value="idol"${m.type==='idol'?' selected':''}>🎤 Artist</option>
+              <option value="fan"${m.type==='fan'?' selected':''}>💜 Fan</option>
+            </select>
+            <input class="form-input" value="${this._esc(m.text)}" id="bmsg-text-${chatIdx}-${mi}" style="flex:1;font-size:12px;padding:6px 10px;">
+            <input class="form-input" value="${this._esc(m.time||'')}" id="bmsg-time-${chatIdx}-${mi}" style="width:70px;font-size:11px;padding:6px 8px;">
+            <button onclick="VELONIA.SocialPage._deleteBubbleMsg(${chatIdx},${mi})" style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:16px;flex-shrink:0;">✕</button>
+          </div>`).join('')}
+      </div>
+      <div class="composer-footer">
+        <button onclick="VELONIA.SocialPage._addBubbleMsgRow(${chatIdx})" style="padding:8px 14px;background:rgba(176,96,255,0.15);border:1px solid rgba(176,96,255,0.3);border-radius:6px;color:var(--neon-purple);cursor:pointer;font-size:12px;">+ Add Message</button>
+        <div style="display:flex;gap:8px;">
+          <button onclick="VELONIA.SocialPage.closeComposer()" style="padding:8px 16px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:var(--text-secondary);cursor:pointer;font-size:12px;">Cancel</button>
+          <button onclick="VELONIA.SocialPage._saveBubbleEdit(${chatIdx})" style="padding:8px 20px;background:var(--neon-cyan);border:none;border-radius:6px;color:var(--deep-navy);cursor:pointer;font-size:12px;font-family:'Orbitron',monospace;letter-spacing:1px;font-weight:700;">SAVE</button>
+        </div>
+      </div>`;
+    document.getElementById('composer-overlay').style.display='flex';
+  },
+
+  _deleteBubbleMsg(chatIdx, msgIdx) {
+    const state   = window.VELONIA.State.get();
+    const bubbles = [...(state.bubbleMessages||[])];
+    if (!bubbles[chatIdx]) return;
+    bubbles[chatIdx].messages.splice(msgIdx, 1);
+    window.VELONIA.State.set('bubbleMessages', bubbles);
+    window.VELONIA.App.save();
+    // Re-open editor
+    this.openBubbleEditor(chatIdx);
+  },
+
+  _addBubbleMsgRow(chatIdx) {
+    const state   = window.VELONIA.State.get();
+    const bubbles = [...(state.bubbleMessages||[])];
+    if (!bubbles[chatIdx]) return;
+    const now = new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+    bubbles[chatIdx].messages.push({ type:'idol', text:'', time:now });
+    window.VELONIA.State.set('bubbleMessages', bubbles);
+    this.openBubbleEditor(chatIdx);
+  },
+
+  _saveBubbleEdit(chatIdx) {
+    const state   = window.VELONIA.State.get();
+    const bubbles = [...(state.bubbleMessages||[])];
+    if (!bubbles[chatIdx]) return;
+    bubbles[chatIdx].messages = bubbles[chatIdx].messages.map((m, mi) => ({
+      type: document.getElementById(`bmsg-type-${chatIdx}-${mi}`)?.value || m.type,
+      text: document.getElementById(`bmsg-text-${chatIdx}-${mi}`)?.value.trim() || m.text,
+      time: document.getElementById(`bmsg-time-${chatIdx}-${mi}`)?.value || m.time,
+    }));
+    window.VELONIA.State.set('bubbleMessages', bubbles);
+    window.VELONIA.App.save();
+    this.closeComposer();
+    this._renderBubble();
+    window.VELONIA.Notify.success('✅ Bubble chat saved');
+  },
+
   _updateComposerPlatform() {
-    const sel=document.getElementById('comp-account');
-    const opt=sel?.options[sel.selectedIndex];
-    const plat=opt?.dataset.platform;
-    if(plat){ const ps=document.getElementById('comp-platform'); if(ps) ps.value=plat; }
+    const sel  = document.getElementById('comp-account');
+    const opt  = sel?.options[sel.selectedIndex];
+    const plat = opt?.dataset.platform;
+    if (plat) {
+      const ps = document.getElementById('comp-platform');
+      if (ps) ps.value = plat;
+    }
   },
 
   submitPost() {
-    const content=document.getElementById('comp-content')?.value.trim();
-    if(!content){ window.VELONIA.Notify.error('❌ Content required'); return; }
-    const platform=document.getElementById('comp-platform')?.value||'instagram';
-    const accId=document.getElementById('comp-account')?.value;
-    const state=window.VELONIA.State.get();
-    const acc=accId?(state.socialAccounts||[]).find(a=>a.id==accId):null;
-    const char=acc?.characterId?(state.characters||[]).find(c=>c.id==acc.characterId):null;
-    const now=new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
-    const post={id:window.VELONIA.Utils.newId(),_meta:window.VELONIA.Utils.meta(),content,caption:content,platform,accountId:accId?(isNaN(accId)?accId:Number(accId)):null,char:char?.name||'',emoji:document.getElementById('comp-emoji')?.value||'📸',imageUrl:document.getElementById('comp-image')?.value.trim()||'',mediaType:document.getElementById('comp-type')?.value||'photo',tags:(document.getElementById('comp-tags')?.value||'').split(',').map(t=>t.trim()).filter(Boolean),likes:'0',comments:'0',views:'0',posted:now,postedAt:new Date().toISOString(),commentThread:[]};
-    window.VELONIA.State.addEntity('posts',post);
+    const content = document.getElementById('comp-content')?.value.trim();
+    if (!content) { window.VELONIA.Notify.error('❌ Content required'); return; }
+    const platform = document.getElementById('comp-platform')?.value || 'instagram';
+    const accId    = document.getElementById('comp-account')?.value;
+    const state    = window.VELONIA.State.get();
+    const acc      = accId ? (state.socialAccounts||[]).find(a=>a.id==accId) : null;
+    const char     = acc?.characterId ? (state.characters||[]).find(c=>c.id==acc.characterId) : null;
+    const now      = new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+    // Read likes/views as strings (keep user-entered format like "248k")
+    const likes = document.getElementById('comp-likes')?.value.trim() || '0';
+    const views = document.getElementById('comp-views')?.value.trim() || '0';
+
+    const post = {
+      id:           window.VELONIA.Utils.newId(),
+      _meta:        window.VELONIA.Utils.meta(),
+      content, caption: content,
+      platform,
+      accountId:    accId ? (isNaN(accId) ? accId : Number(accId)) : null,
+      char:         char?.name || '',
+      emoji:        document.getElementById('comp-emoji')?.value || '📸',
+      imageUrl:     document.getElementById('comp-image')?.value.trim() || '',
+      mediaType:    document.getElementById('comp-type')?.value || 'photo',
+      tags:         (document.getElementById('comp-tags')?.value||'').split(',').map(t=>t.trim()).filter(Boolean),
+      likes, views,
+      comments:     '0',
+      posted:       now,
+      postedAt:     new Date().toISOString(),
+      commentThread: [],
+    };
+    window.VELONIA.State.addEntity('posts', post);
     window.VELONIA.App.save();
-    this.closeComposer(); this.render();
+    this.closeComposer();
+    this.render();
     window.VELONIA.Notify.success(`✅ Posted to ${platform}!`);
   },
 
