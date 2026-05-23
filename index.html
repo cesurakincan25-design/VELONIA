@@ -87,7 +87,7 @@ body:has(a:hover) #cursor, body:has(button:hover) #cursor { transform: scale(2);
   backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--glass-border);
   display: flex; align-items: center;
-  padding: 0 32px;
+  padding: 0 16px 0 24px;
   z-index: 1000;
   gap: 0;
   display: none;
@@ -101,13 +101,25 @@ body:has(a:hover) #cursor, body:has(button:hover) #cursor { transform: scale(2);
   background: linear-gradient(135deg, var(--neon-purple), var(--neon-cyan));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  margin-right: 40px;
+  margin-right: 20px;
   cursor: pointer;
+  flex-shrink: 0;
 }
-.nav-items { display: flex; gap: 4px; flex: 1; }
+/* Nav items scrollable — never pushes Admin button off screen */
+.nav-items {
+  display: flex; gap: 2px;
+  flex: 1; min-width: 0;
+  overflow-x: auto; overflow-y: hidden;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none;
+  padding: 4px 0;
+  mask-image: linear-gradient(to right, transparent 0px, black 8px, black calc(100% - 8px), transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0px, black 8px, black calc(100% - 8px), transparent 100%);
+}
+.nav-items::-webkit-scrollbar { display: none; }
 .nav-item {
-  padding: 8px 14px;
-  font-size: 11px;
+  padding: 7px 12px;
+  font-size: 10px;
   letter-spacing: 1.5px;
   text-transform: uppercase;
   cursor: pointer;
@@ -117,24 +129,38 @@ body:has(a:hover) #cursor, body:has(button:hover) #cursor { transform: scale(2);
   font-family: 'Orbitron', monospace;
   font-weight: 500;
   background: none; border: none;
+  white-space: nowrap; /* prevent wrapping */
+  flex-shrink: 0;
 }
 .nav-item:hover, .nav-item.active {
   color: var(--neon-cyan);
   background: rgba(0,229,255,0.07);
 }
-.nav-right { display: flex; align-items: center; gap: 12px; margin-left: auto; }
+/* Right side — always visible, never pushed off */
+.nav-right {
+  display: flex; align-items: center; gap: 8px;
+  flex-shrink: 0; margin-left: 8px;
+}
 .nav-clock {
   font-family: 'Space Mono', monospace;
-  font-size: 12px;
+  font-size: 11px;
   color: var(--text-secondary);
+  white-space: nowrap;
+}
+/* Hide clock on very small screens to save space */
+@media (max-width: 700px) {
+  .nav-clock { display: none; }
+  .nav-logo { font-size: 14px; letter-spacing: 3px; margin-right: 10px; }
+  #main-nav { padding: 0 10px 0 14px; }
 }
 .admin-btn {
-  padding: 7px 16px;
+  padding: 7px 14px;
   background: linear-gradient(135deg, var(--neon-purple), #6a0dad);
   border: none; border-radius: 6px;
-  color: white; font-size: 11px;
+  color: white; font-size: 10px;
   letter-spacing: 1px; font-family: 'Orbitron', monospace;
   cursor: pointer; transition: all 0.2s;
+  white-space: nowrap; flex-shrink: 0;
 }
 .admin-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 20px rgba(176,96,255,0.4); }
 
@@ -1209,54 +1235,171 @@ body:has(a:hover) #cursor, body:has(button:hover) #cursor { transform: scale(2);
    COMPANIES / GROUPS
    ============================================================ */
 .companies-grid {
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 24px;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 20px;
 }
 .company-card {
   border-radius: 14px; overflow: hidden;
   background: var(--glass); border: 1px solid var(--glass-border);
-  transition: all 0.3s; cursor: pointer; padding: 24px;
+  transition: all 0.3s; cursor: pointer; padding: 0;
   position: relative;
 }
-.company-card::before {
-  content: '';
-  position: absolute; top: 0; left: 0; right: 0; height: 3px;
-  background: var(--company-color, var(--neon-purple));
-  opacity: 0.7;
-}
 .company-card:hover { transform: translateY(-4px); box-shadow: 0 16px 50px rgba(0,0,0,0.4); }
+.company-card-header {
+  padding: 20px 20px 16px;
+  position: relative;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.company-card-accent {
+  position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  border-radius: 14px 14px 0 0;
+}
 .company-logo {
-  width: 60px; height: 60px; border-radius: 12px;
+  width: 56px; height: 56px; border-radius: 12px;
   display: flex; align-items: center; justify-content: center;
-  font-size: 28px; margin-bottom: 16px;
-  background: rgba(255,255,255,0.05);
+  font-size: 26px; margin-bottom: 12px;
+  flex-shrink: 0;
 }
 .company-name {
   font-family: 'Orbitron', monospace;
-  font-size: 16px; font-weight: 700; letter-spacing: 2px; margin-bottom: 4px;
+  font-size: 15px; font-weight: 700; letter-spacing: 2px; margin-bottom: 3px;
 }
-.company-type {
-  font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
-  color: var(--text-secondary); margin-bottom: 12px;
+.company-type-badge {
+  display: inline-flex; align-items: center;
+  padding: 3px 10px; border-radius: 20px;
+  font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase;
+  font-family: 'Orbitron', monospace; margin-bottom: 10px;
 }
-.company-desc { font-size: 13px; line-height: 1.7; color: var(--text-secondary); margin-bottom: 16px; }
-.company-members {
-  display: flex; gap: -8px; margin-bottom: 16px;
-}
+.company-desc { font-size: 12px; line-height: 1.7; color: var(--text-secondary); }
+.company-card-body { padding: 14px 20px 18px; }
+/* Member bubbles */
+.company-members { display: flex; align-items: center; margin-bottom: 12px; }
 .member-bubble {
   width: 28px; height: 28px; border-radius: 50%;
-  background: linear-gradient(135deg, var(--neon-purple), var(--neon-blue));
   border: 2px solid var(--deep-navy);
-  margin-left: -6px; first-child { margin-left: 0; }
-  display: flex; align-items: center; justify-content: center;
+  margin-left: -6px; display: flex; align-items: center; justify-content: center;
   font-size: 10px; font-weight: 700;
 }
 .member-bubble:first-child { margin-left: 0; }
-.company-rep {
-  display: flex; align-items: center; justify-content: space-between;
+.member-more {
+  margin-left: 8px; font-size: 11px; color: var(--text-secondary);
 }
-.rep-label { font-size: 11px; color: var(--text-secondary); }
-.rep-stars { color: var(--gold); font-size: 12px; }
+/* Rep bar */
+.company-rep-bar {
+  margin-bottom: 10px;
+}
+.company-rep-label {
+  display: flex; justify-content: space-between; margin-bottom: 5px;
+}
+.rep-track {
+  height: 4px; background: rgba(255,255,255,0.07); border-radius: 2px; overflow: hidden;
+}
+.rep-fill {
+  height: 100%; border-radius: 2px;
+  transition: width 0.8s cubic-bezier(0.4,0,0.2,1);
+}
+.company-footer {
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 11px; color: var(--text-secondary);
+}
+.company-status-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  display: inline-block; margin-right: 5px;
+}
+
+/* ── GROUPS PAGE ──────────────────────────────────────────── */
+.groups-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+.group-card {
+  border-radius: 14px; overflow: hidden;
+  background: var(--glass); border: 1px solid var(--glass-border);
+  cursor: pointer; transition: all 0.3s; position: relative;
+}
+.group-card:hover { transform: translateY(-4px); box-shadow: 0 16px 50px rgba(0,0,0,0.4); }
+.group-card-banner {
+  height: 90px; display: flex; align-items: center; justify-content: center;
+  font-size: 44px; position: relative; overflow: hidden;
+}
+.group-card-body { padding: 16px 18px 18px; }
+.group-name {
+  font-family: 'Orbitron', monospace; font-size: 15px; font-weight: 700;
+  letter-spacing: 2px; margin-bottom: 4px;
+}
+.group-fandom {
+  font-size: 11px; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 12px;
+}
+.group-member-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.group-member-chip {
+  padding: 3px 10px; border-radius: 20px; font-size: 10px;
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);
+  cursor: pointer; transition: all 0.2s;
+}
+.group-member-chip:hover { border-color: var(--neon-purple); color: var(--neon-purple); }
+.group-footer {
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 11px; color: var(--text-secondary);
+}
+.group-status-badge {
+  padding: 2px 8px; border-radius: 20px; font-size: 9px;
+  font-family: 'Orbitron', monospace; letter-spacing: 1px;
+}
+
+/* ── COMPANY / GROUP MODAL ────────────────────────────────── */
+.co-modal-overlay {
+  position: fixed; inset: 0; z-index: 2100;
+  display: none; align-items: flex-start; justify-content: center;
+  background: rgba(5,7,26,0.92); backdrop-filter: blur(16px);
+  overflow-y: auto; padding: 40px 20px;
+}
+.co-modal-overlay.open { display: flex; }
+.co-modal {
+  position: relative; width: 100%; max-width: 900px;
+  background: var(--navy-mid); border-radius: 16px;
+  border: 1px solid var(--glass-border); overflow: hidden;
+  animation: modalIn 0.3s cubic-bezier(0.4,0,0.2,1);
+}
+.co-modal-banner {
+  height: 140px; display: flex; align-items: flex-end;
+  padding: 0 32px 20px; position: relative; overflow: hidden;
+}
+.co-modal-banner-bg {
+  position: absolute; inset: 0; opacity: 0.15;
+  background-size: cover; background-position: center;
+}
+.co-modal-close {
+  position: absolute; top: 16px; right: 16px;
+  background: rgba(5,7,26,0.7); border: 1px solid rgba(255,255,255,0.15);
+  color: white; width: 32px; height: 32px; border-radius: 50%;
+  cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center;
+  z-index: 2; transition: all 0.2s;
+}
+.co-modal-close:hover { background: rgba(255,61,61,0.3); }
+.co-modal-body { padding: 28px 32px 32px; }
+.co-modal-tabs {
+  display: flex; gap: 0; border-bottom: 1px solid rgba(255,255,255,0.07);
+  margin-bottom: 24px;
+}
+.co-modal-tab {
+  padding: 12px 18px; cursor: pointer;
+  font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+  font-family: 'Orbitron', monospace; color: var(--text-secondary);
+  border-bottom: 2px solid transparent; transition: all 0.2s; margin-bottom: -1px;
+}
+.co-modal-tab:hover { color: var(--text-primary); }
+.co-modal-tab.active { color: var(--neon-cyan); border-bottom-color: var(--neon-cyan); }
+.co-modal-panel { display: none; }
+.co-modal-panel.active { display: block; }
+/* Org chart */
+.org-chart { display: flex; flex-direction: column; gap: 8px; }
+.org-node {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 14px; border-radius: 8px;
+  background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+  cursor: pointer; transition: all 0.2s;
+}
+.org-node:hover { border-color: rgba(176,96,255,0.35); background: rgba(176,96,255,0.07); }
 
 /* ============================================================
    SOCIAL MEDIA SYSTEM
@@ -1973,6 +2116,7 @@ body:has(a:hover) #cursor, body:has(button:hover) #cursor { transform: scale(2);
     <button class="nav-item active" onclick="navigate('dashboard')">Dashboard</button>
     <button class="nav-item" onclick="navigate('characters')">Characters</button>
     <button class="nav-item" onclick="navigate('companies')">Companies</button>
+    <button class="nav-item" onclick="navigate('groups')">Groups</button>
     <button class="nav-item" onclick="navigate('music')">Music</button>
     <button class="nav-item" onclick="navigate('drama')">Drama</button>
     <button class="nav-item" onclick="navigate('social')">Social</button>
@@ -2115,9 +2259,61 @@ body:has(a:hover) #cursor, body:has(button:hover) #cursor { transform: scale(2);
   <div class="section-header">
     <div class="section-title">Companies & <span>Organizations</span></div>
     <div class="section-line"></div>
-    <div class="section-badge">Active</div>
+    <div class="section-badge" id="co-count-badge">Loading...</div>
   </div>
+
+  <!-- Filter + Search bar -->
+  <div class="chars-toolbar" style="margin-bottom:16px;">
+    <div class="chars-search-wrap">
+      <span class="chars-search-icon">🔍</span>
+      <input class="chars-search" id="co-search" placeholder="Search companies..." oninput="VELONIA.CoPage.search(this.value)">
+      <button class="chars-search-clear" id="co-search-clear" onclick="VELONIA.CoPage.clearSearch()" style="display:none;">✕</button>
+    </div>
+  </div>
+
+  <!-- Type filter chips -->
+  <div class="chars-filters" id="co-filters" style="margin-bottom:20px;">
+    <button class="filter-chip active" data-filter="all"            onclick="VELONIA.CoPage.filter(this,'all')">All</button>
+    <button class="filter-chip" data-filter="Entertainment"         onclick="VELONIA.CoPage.filter(this,'Entertainment')">🎭 Entertainment</button>
+    <button class="filter-chip" data-filter="Criminal Front"        onclick="VELONIA.CoPage.filter(this,'Criminal Front')">🖤 Criminal</button>
+    <button class="filter-chip" data-filter="Hacker Collective"     onclick="VELONIA.CoPage.filter(this,'Hacker Collective')">💻 Hacker</button>
+    <button class="filter-chip" data-filter="Government"            onclick="VELONIA.CoPage.filter(this,'Government')">🏛 Government</button>
+    <button class="filter-chip" data-filter="other"                 onclick="VELONIA.CoPage.filter(this,'other')">◼ Other</button>
+  </div>
+
   <div class="companies-grid" id="companies-grid"></div>
+  <div id="co-empty" style="display:none;text-align:center;padding:60px;color:var(--text-secondary);">
+    <div style="font-size:48px;margin-bottom:16px;">🏢</div>
+    <div style="font-family:'Orbitron',monospace;font-size:14px;">No organizations found</div>
+  </div>
+</div>
+</div>
+
+<!-- ===== GROUPS ===== -->
+<div id="page-groups" class="page">
+<div class="page-wrapper">
+  <div class="section-header">
+    <div class="section-title">Idol <span>Groups</span></div>
+    <div class="section-line"></div>
+    <div class="section-badge" id="grp-count-badge">Loading...</div>
+  </div>
+  <div class="chars-toolbar" style="margin-bottom:20px;">
+    <div class="chars-search-wrap">
+      <span class="chars-search-icon">🔍</span>
+      <input class="chars-search" id="grp-search" placeholder="Search groups..." oninput="VELONIA.GrpPage.search(this.value)">
+    </div>
+    <div class="chars-filters" id="grp-filters">
+      <button class="filter-chip active" data-filter="all"      onclick="VELONIA.GrpPage.filter(this,'all')">All</button>
+      <button class="filter-chip" data-filter="active"          onclick="VELONIA.GrpPage.filter(this,'active')">● Active</button>
+      <button class="filter-chip" data-filter="hiatus"          onclick="VELONIA.GrpPage.filter(this,'hiatus')">⏸ Hiatus</button>
+      <button class="filter-chip" data-filter="disbanded"       onclick="VELONIA.GrpPage.filter(this,'disbanded')">✕ Disbanded</button>
+    </div>
+  </div>
+  <div id="groups-grid" class="groups-grid"></div>
+  <div id="grp-empty" style="display:none;text-align:center;padding:60px;color:var(--text-secondary);">
+    <div style="font-size:48px;margin-bottom:16px;">⭐</div>
+    <div style="font-family:'Orbitron',monospace;font-size:14px;">No groups found</div>
+  </div>
 </div>
 </div>
 
@@ -2382,6 +2578,11 @@ body:has(a:hover) #cursor, body:has(button:hover) #cursor { transform: scale(2);
       </div>
     </div>
   </div>
+</div>
+
+<!-- Company / Group Detail Modal -->
+<div class="co-modal-overlay" id="co-modal-overlay" onclick="if(event.target===this)VELONIA.CoPage.closeModal()">
+  <div class="co-modal" id="co-modal-content"></div>
 </div>
 
 <script>
@@ -3407,21 +3608,7 @@ window.VELONIA = (function() {
 
     // ── Companies ────────────────────────────────────────
     companies() {
-      const grid = document.getElementById('companies-grid'); if (!grid) return;
-      grid.innerHTML = DAL.companies.all().map(co => `
-        <div class="company-card" style="--company-color:${Utils.esc(co.color)}">
-          <div class="company-logo" style="background:${co.color}22;">${Utils.esc(co.emoji)}</div>
-          <div class="company-name" style="color:${Utils.esc(co.color)}">${Utils.esc(co.name)}</div>
-          <div class="company-type">${Utils.esc(co.type)}</div>
-          <div class="company-desc">${Utils.esc(co.desc)}</div>
-          <div class="company-members" style="display:flex;gap:0;flex-wrap:wrap;margin-bottom:12px;">
-            ${(co.members||[]).map((m,i)=>`<div class="member-bubble" style="background:linear-gradient(135deg,${co.color},${co.color}66);margin-left:${i>0?'-8px':'0'}" title="${Utils.esc(m)}">${Utils.esc(m.charAt(0))}</div>`).join('')}
-          </div>
-          <div class="company-rep">
-            <span class="rep-label">${(co.tags||[]).map(t=>Utils.esc(t)).join(' · ')}</span>
-            <span class="rep-stars">${'★'.repeat(co.rep||3)}${'☆'.repeat(5-(co.rep||3))}</span>
-          </div>
-        </div>`).join('');
+      if (window.VELONIA.CoPage) window.VELONIA.CoPage.render();
     },
 
     // ── Music ────────────────────────────────────────────
@@ -7075,6 +7262,13 @@ window.VELONIA.App.boot = async function() {
   // Register CharPage & re-register characters route
   window.VELONIA.CharPage = CharPage;
   window.VELONIA.Router.register('characters', () => CharPage.render());
+
+  // Register CoPage + GrpPage
+  window.VELONIA.CoPage  = CoPage;
+  window.VELONIA.GrpPage = GrpPage;
+  window.VELONIA.Router.register('companies', () => CoPage.render());
+  window.VELONIA.Router.register('groups',    () => GrpPage.render());
+
   // Update legacy shim
   window.filterChars = (btn) => CharPage.filter(btn, btn.dataset.filter);
 
@@ -7346,7 +7540,306 @@ const CharPage = {
 };
 
 window.VELONIA.CharPage = CharPage;
-//  Tam geliştirme planı — sekme sekme, öncelik sırasıyla
+
+// ─────────────────────────────────────────────────────────────────
+//  CO PAGE MODULE — Companies & Organizations
+// ─────────────────────────────────────────────────────────────────
+const CoPage = {
+  _filter:'all', _search:'',
+
+  render() {
+    const items = this._getFiltered();
+    const grid  = document.getElementById('companies-grid');
+    const empty = document.getElementById('co-empty');
+    const badge = document.getElementById('co-count-badge');
+    if (!grid) return;
+    if (badge) badge.textContent = `${window.VELONIA.DAL.companies.all().length} Organizations`;
+    if (items.length === 0) { grid.innerHTML=''; if(empty) empty.style.display='block'; return; }
+    if (empty) empty.style.display = 'none';
+    const state = window.VELONIA.State.get();
+    grid.innerHTML = items.map(co => this._card(co, state)).join('');
+    setTimeout(() => {
+      grid.querySelectorAll('.rep-fill').forEach(el => {
+        const w=el.style.width; el.style.width='0'; setTimeout(()=>el.style.width=w,50);
+      });
+    }, 100);
+  },
+
+  _getFiltered() {
+    let items = window.VELONIA.DAL.companies.all();
+    const known = ['Entertainment','Criminal Front','Hacker Collective','Government'];
+    if (this._filter !== 'all') {
+      if (this._filter === 'other') items = items.filter(c=>!known.includes(c.type));
+      else items = items.filter(c=>c.type===this._filter);
+    }
+    if (this._search) {
+      const q = this._search.toLowerCase();
+      items = items.filter(c =>
+        c.name.toLowerCase().includes(q) ||
+        (c.desc||'').toLowerCase().includes(q) ||
+        (c.type||'').toLowerCase().includes(q) ||
+        (c.tags||[]).some(t=>t.toLowerCase().includes(q))
+      );
+    }
+    return items;
+  },
+
+  _card(co, state) {
+    const esc = window.VELONIA.Utils.esc.bind(window.VELONIA.Utils);
+    const members = (co.memberIds||[]).map(id=>(state.characters||[]).find(c=>c.id==id)).filter(Boolean);
+    const color  = co.color||'#607d8b';
+    const statusColors = {active:'#00e5ff',dissolved:'#ff3d3d',underground:'#ffd700',classified:'#b060ff'};
+    const statusDot = statusColors[co.status||'active']||'#00e5ff';
+    const repPct = ((co.rep||3)/5)*100;
+    return `
+      <div class="company-card" onclick="VELONIA.CoPage.openModal(${co.id})">
+        <div class="company-card-header">
+          <div class="company-card-accent" style="background:linear-gradient(90deg,${color},${color}44)"></div>
+          <div style="display:flex;align-items:flex-start;gap:14px;">
+            <div class="company-logo" style="background:${color}18;border:1px solid ${color}33;">${esc(co.emoji)}</div>
+            <div style="flex:1;min-width:0;">
+              <div class="company-name" style="color:${color}">${esc(co.name)}</div>
+              <div class="company-type-badge" style="background:${color}18;border:1px solid ${color}33;color:${color}">${esc(co.type||'Organization')}</div>
+              <div class="company-desc">${esc((co.desc||'').substring(0,90))}${(co.desc||'').length>90?'…':''}</div>
+            </div>
+          </div>
+        </div>
+        <div class="company-card-body">
+          <div class="company-rep-bar">
+            <div class="company-rep-label">
+              <span style="font-size:10px;color:var(--text-secondary);letter-spacing:1px;">REPUTATION</span>
+              <span style="font-size:11px;color:${color};font-family:'Orbitron',monospace;">${co.rep||3}/5</span>
+            </div>
+            <div class="rep-track"><div class="rep-fill" style="width:${repPct}%;background:linear-gradient(90deg,${color},${color}88);"></div></div>
+          </div>
+          ${members.length>0?`
+            <div class="company-members">
+              ${members.slice(0,8).map(m=>`<div class="member-bubble" title="${esc(m.name)}" style="background:linear-gradient(135deg,${color},${color}66);">${m.emoji||esc(m.name.charAt(0))}</div>`).join('')}
+              ${members.length>8?`<span class="member-more">+${members.length-8}</span>`:''}
+            </div>`:''}
+          <div class="company-footer">
+            <div>
+              <span class="company-status-dot" style="background:${statusDot};box-shadow:0 0 5px ${statusDot};"></span>
+              <span>${co.status||'active'}</span>
+              ${co.founded?`<span style="margin-left:10px;">Est. ${co.founded}</span>`:''}
+            </div>
+            <div style="color:${color};font-size:11px;">${(co.tags||[]).slice(0,2).map(t=>esc(t)).join(' · ')}</div>
+          </div>
+        </div>
+      </div>`;
+  },
+
+  filter(btn, type) {
+    document.querySelectorAll('#co-filters .filter-chip').forEach(c=>c.classList.remove('active'));
+    btn.classList.add('active'); this._filter=type; this.render();
+  },
+
+  search(q) {
+    this._search=q;
+    const cb=document.getElementById('co-search-clear');
+    if(cb) cb.style.display=q?'block':'none';
+    this.render();
+  },
+
+  clearSearch() {
+    this._search='';
+    const i=document.getElementById('co-search'); if(i) i.value='';
+    const cb=document.getElementById('co-search-clear'); if(cb) cb.style.display='none';
+    this.render();
+  },
+
+  openModal(id) {
+    const co=window.VELONIA.DAL.companies.byId(id); if(!co) return;
+    const state=window.VELONIA.State.get();
+    const esc=window.VELONIA.Utils.esc.bind(window.VELONIA.Utils);
+    const color=co.color||'#b060ff';
+    const members=(co.memberIds||[]).map(id=>(state.characters||[]).find(c=>c.id==id)).filter(Boolean);
+    const groups=(state.groups||[]).filter(g=>g.companyId==id);
+    const albums=(state.albums||[]).filter(a=>a.companyId==id);
+    const statusColors={active:'#00e5ff',dissolved:'#ff3d3d',underground:'#ffd700',classified:'#b060ff'};
+    const repPct=((co.rep||3)/5)*100;
+    const modal=document.getElementById('co-modal-content');
+    modal.innerHTML=`
+      <div class="co-modal-banner" style="background:linear-gradient(135deg,${color}33,${color}11);">
+        <div class="co-modal-banner-bg" ${co.imgUrl?`style="background-image:url('${esc(co.imgUrl)}')"`:''} ></div>
+        <button class="co-modal-close" onclick="VELONIA.CoPage.closeModal()">✕</button>
+        <div style="display:flex;align-items:center;gap:16px;position:relative;z-index:1;">
+          <div class="company-logo" style="background:${color}22;border:1px solid ${color}44;width:64px;height:64px;font-size:30px;">${esc(co.emoji)}</div>
+          <div>
+            <div style="font-family:'Orbitron',monospace;font-size:20px;font-weight:900;color:${color};letter-spacing:2px;">${esc(co.name)}</div>
+            <div style="font-size:11px;color:var(--text-secondary);margin-top:3px;">${esc(co.type||'')}${co.hq?' · 📍 '+esc(co.hq):''}</div>
+          </div>
+        </div>
+      </div>
+      <div class="co-modal-body">
+        <div class="co-modal-tabs">
+          <div class="co-modal-tab active" onclick="VELONIA.CoPage.modalTab(this,'overview')">Overview</div>
+          <div class="co-modal-tab" onclick="VELONIA.CoPage.modalTab(this,'members')">Members (${members.length})</div>
+          ${groups.length>0?`<div class="co-modal-tab" onclick="VELONIA.CoPage.modalTab(this,'groups')">Groups (${groups.length})</div>`:''}
+          ${albums.length>0?`<div class="co-modal-tab" onclick="VELONIA.CoPage.modalTab(this,'albums')">Albums (${albums.length})</div>`:''}
+        </div>
+        <div class="co-modal-panel active" id="co-panel-overview">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+            <div>
+              <div style="font-size:10px;color:var(--text-secondary);letter-spacing:2px;font-family:'Orbitron',monospace;margin-bottom:14px;">INTEL</div>
+              ${[['Type',co.type||'—'],['Status',co.status||'active'],['Founded',co.founded||'—'],['HQ',co.hq||'—'],['Reputation',`${co.rep||3}/5`],['Members',members.length]].map(([k,v])=>`
+                <div class="profile-stat-row"><span class="profile-stat-label">${k}</span><span class="profile-stat-value" style="${k==='Status'?`color:${statusColors[v]||'var(--neon-cyan)'}`:k==='Reputation'?`color:${color}`:''}">
+                ${esc(String(v))}</span></div>`).join('')}
+              <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:14px;">
+                ${(co.tags||[]).map(t=>`<span class="char-tag" style="background:${color}18;border-color:${color}33;color:${color}">${esc(t)}</span>`).join('')}
+              </div>
+            </div>
+            <div>
+              <div style="font-size:10px;color:var(--text-secondary);letter-spacing:2px;font-family:'Orbitron',monospace;margin-bottom:12px;">ABOUT</div>
+              <div style="font-size:13px;color:var(--text-secondary);line-height:1.8;">${esc(co.desc||'No description.')}</div>
+              ${co.secretDesc?`<div style="margin-top:16px;padding:12px;background:rgba(255,61,61,0.07);border:1px solid rgba(255,61,61,0.2);border-radius:8px;"><div style="font-size:9px;color:var(--danger);letter-spacing:2px;font-family:'Orbitron',monospace;margin-bottom:6px;">⚠ CLASSIFIED</div><div style="font-size:12px;color:var(--text-secondary);">${esc(co.secretDesc)}</div></div>`:''}
+              <div style="margin-top:20px;"><div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span style="font-size:10px;color:var(--text-secondary);letter-spacing:1px;">REPUTATION</span><span style="font-size:12px;color:${color};font-family:'Orbitron',monospace;">${co.rep||3}/5</span></div>
+              <div class="rep-track" style="height:6px;"><div class="rep-fill" style="width:${repPct}%;background:linear-gradient(90deg,${color},${color}88);"></div></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="co-modal-panel" id="co-panel-members">
+          ${members.length===0?`<div style="color:var(--text-dim);font-size:13px;padding:20px 0;">No linked characters.</div>`
+          :`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;">
+            ${members.map(m=>`<div onclick="VELONIA.CoPage.closeModal();VELONIA.Actions.openProfile(${m.id})" style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:8px;cursor:pointer;transition:all 0.2s;" onmouseenter="this.style.borderColor='${color}55'" onmouseleave="this.style.borderColor='rgba(255,255,255,0.07)'"><div style="font-size:24px;">${m.emoji||'⭐'}</div><div><div style="font-size:13px;font-weight:600;">${esc(m.name)}</div><div style="font-size:10px;color:var(--text-secondary);">${(m.categories||[m.type]).join('/')}</div></div></div>`).join('')}
+          </div>`}
+        </div>
+        ${groups.length>0?`<div class="co-modal-panel" id="co-panel-groups"><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;">${groups.map(g=>`<div onclick="VELONIA.CoPage.closeModal();VELONIA.Router.navigate('groups')" style="padding:14px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:8px;cursor:pointer;" onmouseenter="this.style.borderColor='${esc(g.color||color)}55'" onmouseleave="this.style.borderColor='rgba(255,255,255,0.07)'"><div style="font-size:28px;margin-bottom:8px;">${g.emoji||'⭐'}</div><div style="font-family:'Orbitron',monospace;font-size:13px;font-weight:700;color:${esc(g.color||color)}">${esc(g.name)}</div><div style="font-size:11px;color:var(--text-secondary);margin-top:4px;">${(g.memberIds||[]).length} members</div></div>`).join('')}</div></div>`:''}
+        ${albums.length>0?`<div class="co-modal-panel" id="co-panel-albums"><div style="display:flex;flex-direction:column;gap:8px;">${albums.map(a=>`<div onclick="VELONIA.CoPage.closeModal();VELONIA.Router.navigate('music')" style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:8px;cursor:pointer;" onmouseenter="this.style.borderColor='${esc(a.color||color)}55'" onmouseleave="this.style.borderColor='rgba(255,255,255,0.07)'"><div style="width:44px;height:44px;border-radius:8px;background:linear-gradient(135deg,${esc(a.color||color)}44,${esc(a.color||color)}11);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">${a.emoji||'💿'}</div><div><div style="font-size:13px;font-weight:600;">${esc(a.title)}</div><div style="font-size:11px;color:var(--text-secondary);">${esc(a.artist||'')} · ${a.year||''}</div></div></div>`).join('')}</div></div>`:''}
+      </div>`;
+    document.getElementById('co-modal-overlay').classList.add('open');
+    setTimeout(()=>{ modal.querySelectorAll('.rep-fill').forEach(el=>{const w=el.style.width;el.style.width='0';setTimeout(()=>el.style.width=w,50);}); },100);
+  },
+
+  closeModal() { document.getElementById('co-modal-overlay').classList.remove('open'); },
+
+  modalTab(btn, id) {
+    const modal=document.getElementById('co-modal-content');
+    modal.querySelectorAll('.co-modal-tab').forEach(t=>t.classList.remove('active'));
+    modal.querySelectorAll('.co-modal-panel').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    const panel=modal.querySelector(`#co-panel-${id}`);
+    if(panel) panel.classList.add('active');
+  }
+};
+window.VELONIA.CoPage = CoPage;
+
+// ─────────────────────────────────────────────────────────────────
+//  GRP PAGE MODULE — Idol Groups
+// ─────────────────────────────────────────────────────────────────
+const GrpPage = {
+  _filter:'all', _search:'',
+
+  render() {
+    const items=this._getFiltered();
+    const grid=document.getElementById('groups-grid');
+    const empty=document.getElementById('grp-empty');
+    const badge=document.getElementById('grp-count-badge');
+    if(!grid) return;
+    if(badge) badge.textContent=`${window.VELONIA.State.read('groups')?.length||0} Groups`;
+    if(items.length===0){ grid.innerHTML=''; if(empty) empty.style.display='block'; return; }
+    if(empty) empty.style.display='none';
+    const state=window.VELONIA.State.get();
+    grid.innerHTML=items.map(g=>this._card(g,state)).join('');
+  },
+
+  _getFiltered() {
+    let items=window.VELONIA.State.read('groups')||[];
+    if(this._filter!=='all') items=items.filter(g=>g.status===this._filter);
+    if(this._search){ const q=this._search.toLowerCase(); items=items.filter(g=>g.name.toLowerCase().includes(q)||(g.fandom||'').toLowerCase().includes(q)); }
+    return items;
+  },
+
+  _card(g,state) {
+    const esc=window.VELONIA.Utils.esc.bind(window.VELONIA.Utils);
+    const color=g.color||'#b060ff';
+    const members=(g.memberIds||[]).map(id=>(state.characters||[]).find(c=>c.id==id)).filter(Boolean);
+    const statusColors={active:'#00e5ff',hiatus:'#ffd700',disbanded:'#ff3d3d'};
+    const sc=statusColors[g.status||'active']||'#00e5ff';
+    return `
+      <div class="group-card" onclick="VELONIA.GrpPage.openModal(${g.id})">
+        <div class="group-card-banner" style="background:linear-gradient(135deg,${color}33,${color}11);">
+          <div style="font-size:44px;position:relative;z-index:1;">${esc(g.emoji)}</div>
+          <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 50%,rgba(10,14,46,0.9) 100%)"></div>
+        </div>
+        <div class="group-card-body">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px;">
+            <div class="group-name" style="color:${color}">${esc(g.name)}</div>
+            <span class="group-status-badge" style="background:${sc}18;border:1px solid ${sc}44;color:${sc}">${g.status||'active'}</span>
+          </div>
+          ${g.fandom?`<div class="group-fandom" style="color:${color}99;">♡ ${esc(g.fandom)} Fandom</div>`:''}
+          <div class="group-member-row">
+            ${members.slice(0,6).map(m=>`<span class="group-member-chip" onclick="event.stopPropagation();VELONIA.Actions.openProfile(${m.id})">${m.emoji||''} ${esc(m.name)}</span>`).join('')}
+            ${members.length>6?`<span class="group-member-chip">+${members.length-6} more</span>`:''}
+          </div>
+          <div class="group-footer">
+            <span>${g.debutYear?'Est. '+g.debutYear:''}</span>
+            <span style="color:${color};font-size:11px;">${members.length} members</span>
+          </div>
+        </div>
+      </div>`;
+  },
+
+  filter(btn,val) {
+    document.querySelectorAll('#grp-filters .filter-chip').forEach(c=>c.classList.remove('active'));
+    btn.classList.add('active'); this._filter=val; this.render();
+  },
+
+  search(q){ this._search=q; this.render(); },
+
+  openModal(id) {
+    const g=(window.VELONIA.State.read('groups')||[]).find(x=>x.id==id); if(!g) return;
+    const state=window.VELONIA.State.get();
+    const esc=window.VELONIA.Utils.esc.bind(window.VELONIA.Utils);
+    const color=g.color||'#b060ff';
+    const members=(g.memberIds||[]).map(id=>(state.characters||[]).find(c=>c.id==id)).filter(Boolean);
+    const company=g.companyId?(state.companies||[]).find(c=>c.id==g.companyId):null;
+    const albums=(state.albums||[]).filter(a=>a.groupId==id);
+    const statusColors={active:'#00e5ff',hiatus:'#ffd700',disbanded:'#ff3d3d'};
+    const modal=document.getElementById('co-modal-content');
+    modal.innerHTML=`
+      <div class="co-modal-banner" style="background:linear-gradient(135deg,${color}33,${color}11);">
+        <button class="co-modal-close" onclick="VELONIA.CoPage.closeModal()">✕</button>
+        <div style="display:flex;align-items:center;gap:16px;position:relative;z-index:1;">
+          <div style="font-size:52px;">${esc(g.emoji)}</div>
+          <div>
+            <div style="font-family:'Orbitron',monospace;font-size:22px;font-weight:900;color:${color};letter-spacing:2px;">${esc(g.name)}</div>
+            ${g.fandom?`<div style="font-size:12px;color:${color}99;margin-top:3px;">♡ ${esc(g.fandom)} Fandom</div>`:''}
+          </div>
+        </div>
+      </div>
+      <div class="co-modal-body">
+        <div class="co-modal-tabs">
+          <div class="co-modal-tab active" onclick="VELONIA.CoPage.modalTab(this,'grp-overview')">Overview</div>
+          <div class="co-modal-tab" onclick="VELONIA.CoPage.modalTab(this,'grp-members')">Members (${members.length})</div>
+          ${albums.length>0?`<div class="co-modal-tab" onclick="VELONIA.CoPage.modalTab(this,'grp-albums')">Discography (${albums.length})</div>`:''}
+        </div>
+        <div class="co-modal-panel active" id="co-panel-grp-overview">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+            <div>
+              ${[['Status',g.status||'active'],['Debut',g.debutYear||'—'],['Disband',g.disbandYear||'—'],['Fandom',g.fandom||'—'],['Company',company?.name||'Independent'],['Members',members.length]].map(([k,v])=>`
+                <div class="profile-stat-row"><span class="profile-stat-label">${k}</span><span class="profile-stat-value" style="${k==='Status'?`color:${statusColors[v]||'var(--neon-cyan)'}`:k==='Company'?`color:${color}`:''}">
+                ${esc(String(v))}</span></div>`).join('')}
+              <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:14px;">${(g.tags||[]).map(t=>`<span class="char-tag" style="background:${color}18;border-color:${color}33;color:${color}">${esc(t)}</span>`).join('')}</div>
+            </div>
+            <div>
+              <div style="font-size:10px;color:var(--text-secondary);letter-spacing:2px;font-family:'Orbitron',monospace;margin-bottom:12px;">ABOUT</div>
+              <div style="font-size:13px;color:var(--text-secondary);line-height:1.8;">${esc(g.desc||'No description.')}</div>
+              ${albums.length>0?`<div style="margin-top:20px;"><div style="font-size:10px;color:var(--text-secondary);letter-spacing:2px;font-family:'Orbitron',monospace;margin-bottom:10px;">DISCOGRAPHY</div><div style="display:flex;gap:8px;flex-wrap:wrap;">${albums.map(a=>`<div style="padding:6px 12px;background:${esc(a.color||color)}18;border:1px solid ${esc(a.color||color)}33;border-radius:6px;font-size:11px;cursor:pointer;" onclick="VELONIA.CoPage.closeModal();VELONIA.Router.navigate('music')">${a.emoji||'💿'} ${esc(a.title)}</div>`).join('')}</div></div>`:''}
+            </div>
+          </div>
+        </div>
+        <div class="co-modal-panel" id="co-panel-grp-members">
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;">
+            ${members.map(m=>`<div onclick="VELONIA.CoPage.closeModal();VELONIA.Actions.openProfile(${m.id})" style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:8px;cursor:pointer;transition:all 0.2s;" onmouseenter="this.style.borderColor='${color}55'" onmouseleave="this.style.borderColor='rgba(255,255,255,0.07)'"><div style="font-size:24px;">${m.emoji||'⭐'}</div><div><div style="font-size:13px;font-weight:600;">${esc(m.name)}</div><div style="font-size:10px;color:var(--text-secondary);">${(m.categories||[m.type]).join('/')}</div></div></div>`).join('')}
+          </div>
+        </div>
+        ${albums.length>0?`<div class="co-modal-panel" id="co-panel-grp-albums"><div style="display:flex;flex-direction:column;gap:8px;">${albums.map(a=>`<div onclick="VELONIA.CoPage.closeModal();VELONIA.Router.navigate('music')" style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:8px;cursor:pointer;" onmouseenter="this.style.borderColor='${esc(a.color||color)}55'" onmouseleave="this.style.borderColor='rgba(255,255,255,0.07)'"><div style="width:44px;height:44px;border-radius:8px;background:linear-gradient(135deg,${esc(a.color||color)}44,${esc(a.color||color)}11);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">${a.emoji||'💿'}</div><div><div style="font-size:13px;font-weight:600;">${esc(a.title)}</div><div style="font-size:11px;color:var(--text-secondary);">${esc(a.albumType||'')} · ${a.year||''}</div></div></div>`).join('')}</div></div>`:''}
+      </div>`;
+    document.getElementById('co-modal-overlay').classList.add('open');
+  }
+};
+window.VELONIA.GrpPage = GrpPage;
 // ─────────────────────────────────────────────────────────────────
 
 const ROADMAP_DATA = [
@@ -7402,19 +7895,23 @@ const ROADMAP_DATA = [
     ]
   },
   {
-    phase: 4, title: 'COMPANIES & GROUPS', sub: 'SIRADAM — Sonraki geliştirme', color: '#00e5ff',
-    status: 'active',
+    phase: 4, title: 'COMPANIES & GROUPS', sub: 'Tamamlandı — v8', color: '#00e5ff',
+    status: 'done',
     items: [
-      { icon:'📋', title:'Company Detail Modal',               desc:'Üyeler grid, bağlı albumler, dramalar, event\'ler',   status:'planned' },
-      { icon:'📋', title:'Company — Power/Reputation Bar',     desc:'Görsel rep-bar, status badge, kuruluş tarihi',        status:'planned' },
-      { icon:'📋', title:'Idol Groups Sayfası (yeni sekme)',   desc:'Groups listesi + detay modal, üye grid, discography', status:'planned' },
-      { icon:'📋', title:'Group — Fandom Counter',             desc:'Fandom adı, üye sayısı animasyonu',                  status:'planned' },
-      { icon:'📋', title:'Org Chart / Power Map',              desc:'Company → Group → Character hiyerarşi görünümü',     status:'planned' },
+      { icon:'✅', title:'Company Card — Redesign',             desc:'Accent bar, logo, type badge, rep bar, member bubbles, status dot, footer', status:'done' },
+      { icon:'✅', title:'Company Detail Modal — 4 Tab',        desc:'Overview · Members · Groups · Albums — hepsi tıklanabilir cross-link ile',  status:'done' },
+      { icon:'✅', title:'Company — Reputation Bar',            desc:'Animasyonlu gradient bar, 1–5 rep skoru görsel',                            status:'done' },
+      { icon:'✅', title:'Company — Classified Intel',          desc:'secretDesc alanı kırmızı CLASSIFIED panelde gösterilir',                    status:'done' },
+      { icon:'✅', title:'Company Search + Type Filter',        desc:'Canlı arama, Entertainment/Criminal/Hacker/Government/Other chip filter',   status:'done' },
+      { icon:'✅', title:'Idol Groups Sayfası — Yeni Sekme',   desc:'Nav\'da Groups butonu, kendi sayfası, grid + status filter',                status:'done' },
+      { icon:'✅', title:'Group Card — Fandom, Members, Status',desc:'Fandom adı ♡, üye chip\'leri tıklanabilir, debut yılı, status badge',      status:'done' },
+      { icon:'✅', title:'Group Detail Modal — 3 Tab',          desc:'Overview · Members · Discography — company linki, albums listesi',         status:'done' },
+      { icon:'✅', title:'Nav — Admin Butonu Fix (Responsive)',  desc:'Nav items scroll olur, Admin butonu her zaman görünür, mobile clock gizli', status:'done' },
     ]
   },
   {
-    phase: 5, title: 'SOCIAL MEDIA — Tam Platform Sistemi', sub: 'Phase 4 bittikten sonra', color: '#ff2d9b',
-    status: 'planned',
+    phase: 5, title: 'SOCIAL MEDIA — Tam Platform Sistemi', sub: 'SIRADAM — Sonraki geliştirme', color: '#ff2d9b',
+    status: 'active',
     items: [
       { icon:'📋', title:'Social Accounts Sayfası (yeni sekme)',desc:'Platform başlıkları: Instagram / YouTube / Bubble / TikTok', status:'planned' },
       { icon:'📋', title:'Post Composer',                      desc:'Admin olmadan post oluştur — account seç, içerik yaz, emoji/image ekle', status:'planned' },
