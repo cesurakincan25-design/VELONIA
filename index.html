@@ -1142,41 +1142,57 @@ body:has(a:hover) #cursor, body:has(button:hover) #cursor { transform: scale(2);
    DRAMA / NETFLIX SYSTEM
    ============================================================ */
 .drama-banner {
-  position: relative; border-radius: 16px; overflow: hidden;
-  height: 420px; margin-bottom: 40px; cursor: pointer;
+  position: relative; overflow: hidden;
+  height: 520px; margin-bottom: 0; cursor: pointer;
 }
 .drama-banner-bg {
+  position: absolute; inset: 0;
   width: 100%; height: 100%; object-fit: cover;
+  filter: brightness(0.55);
 }
 .drama-banner-ph {
-  width: 100%; height: 100%;
+  position: absolute; inset: 0;
   display: flex; align-items: center; justify-content: center;
-  font-size: 80px;
+  font-size: 100px;
   background: linear-gradient(135deg, #0d0020 0%, #001040 50%, #0d0020 100%);
 }
 .drama-banner-overlay {
   position: absolute; inset: 0;
-  background: linear-gradient(to right, rgba(5,7,26,0.95) 40%, transparent 80%),
-              linear-gradient(to top, rgba(5,7,26,0.7) 0%, transparent 40%);
+  background: linear-gradient(to right, rgba(5,7,26,0.95) 35%, rgba(5,7,26,0.4) 70%, transparent 100%),
+              linear-gradient(to top, rgba(5,7,26,0.8) 0%, transparent 50%);
 }
 .drama-banner-content {
-  position: absolute; top: 50%; left: 48px; transform: translateY(-50%);
+  position: absolute; bottom: 60px; left: 48px; max-width: 560px;
 }
 .drama-rating {
-  display: flex; align-items: center; gap: 6px;
-  font-size: 11px; color: var(--gold); margin-bottom: 12px;
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12px; color: var(--gold); margin-bottom: 12px;
+  font-family: 'Space Mono', monospace;
+}
+.drama-banner-badges {
+  display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px;
+}
+.drama-genre-badge {
+  padding: 3px 10px; border-radius: 4px; font-size: 10px;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  background: rgba(255,255,255,0.15); color: white;
+  font-family: 'Orbitron', monospace;
 }
 .drama-banner-title {
   font-family: 'Orbitron', monospace;
-  font-size: 42px; font-weight: 900;
-  letter-spacing: 3px; margin-bottom: 8px;
+  font-size: 44px; font-weight: 900;
+  letter-spacing: 2px; margin-bottom: 10px;
+  line-height: 1.1;
+  text-shadow: 0 2px 20px rgba(0,0,0,0.5);
 }
 .drama-banner-meta {
-  font-size: 13px; color: var(--text-secondary); margin-bottom: 16px;
+  font-size: 12px; color: var(--text-secondary); margin-bottom: 14px;
+  display: flex; align-items: center; gap: 12px;
 }
 .drama-banner-desc {
   font-size: 14px; line-height: 1.8;
-  color: rgba(255,255,255,0.7); max-width: 500px; margin-bottom: 24px;
+  color: rgba(255,255,255,0.75); max-width: 480px; margin-bottom: 24px;
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
 }
 .drama-btns { display: flex; gap: 12px; }
 .btn-watch {
@@ -1184,52 +1200,194 @@ body:has(a:hover) #cursor, body:has(button:hover) #cursor { transform: scale(2);
   background: white; color: black;
   font-weight: 700; font-size: 14px;
   cursor: pointer; border: none; transition: all 0.2s;
+  display: flex; align-items: center; gap: 8px;
 }
-.btn-watch:hover { background: rgba(255,255,255,0.85); }
+.btn-watch:hover { background: rgba(255,255,255,0.85); transform: scale(1.02); }
 .btn-more-info {
   padding: 12px 28px; border-radius: 4px;
-  background: rgba(255,255,255,0.2); color: white;
+  background: rgba(109,109,110,0.7); color: white;
   font-weight: 600; font-size: 14px;
   cursor: pointer; border: none; transition: all 0.2s;
+  display: flex; align-items: center; gap: 8px;
+  backdrop-filter: blur(4px);
 }
-.drama-row { margin-bottom: 32px; }
+.btn-more-info:hover { background: rgba(109,109,110,0.5); }
+
+/* User rating stars */
+.drama-user-rating {
+  display: flex; gap: 4px; margin-bottom: 14px;
+}
+.rating-star {
+  font-size: 20px; cursor: pointer; transition: all 0.15s;
+  color: rgba(255,215,0,0.3); text-shadow: none;
+}
+.rating-star.filled { color: var(--gold); text-shadow: 0 0 8px rgba(255,215,0,0.5); }
+.rating-star:hover { transform: scale(1.2); }
+
+/* Maturity badge */
+.maturity-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 24px; height: 24px; border: 1px solid rgba(255,255,255,0.4);
+  border-radius: 2px; font-size: 10px; font-weight: 700;
+  color: rgba(255,255,255,0.7);
+}
+
+/* Drama rows */
+.drama-row { margin-bottom: 40px; }
 .drama-row-title {
   font-family: 'Orbitron', monospace;
-  font-size: 15px; letter-spacing: 2px;
-  margin-bottom: 16px;
+  font-size: 14px; letter-spacing: 2px;
+  margin-bottom: 14px; padding: 0 0 8px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  display: flex; align-items: center; gap: 10px;
+}
+.drama-row-count {
+  font-size: 10px; color: var(--text-dim);
+  font-family: 'Space Mono', monospace;
 }
 .drama-scroll {
-  display: flex; gap: 12px; overflow-x: auto;
-  padding-bottom: 8px;
-  scrollbar-width: thin;
+  display: flex; gap: 10px; overflow-x: auto;
+  padding-bottom: 12px;
+  scrollbar-width: thin; scrollbar-color: rgba(176,96,255,0.3) transparent;
 }
+.drama-scroll::-webkit-scrollbar { height: 4px; }
+.drama-scroll::-webkit-scrollbar-track { background: transparent; }
+.drama-scroll::-webkit-scrollbar-thumb { background: rgba(176,96,255,0.3); border-radius: 2px; }
 .drama-card {
-  flex-shrink: 0; width: 200px; border-radius: 8px; overflow: hidden;
-  cursor: pointer; transition: all 0.3s; position: relative;
+  flex-shrink: 0; width: 160px; border-radius: 6px; overflow: hidden;
+  cursor: pointer; transition: all 0.25s; position: relative;
 }
-.drama-card:hover { transform: scale(1.05); z-index: 10; }
-.drama-card-thumb {
-  width: 100%; aspect-ratio: 2/3;
-  object-fit: cover;
-}
+.drama-card:hover { transform: scale(1.06) translateY(-4px); z-index: 10; box-shadow: 0 12px 40px rgba(0,0,0,0.6); }
 .drama-card-ph {
   width: 100%; aspect-ratio: 2/3;
   display: flex; align-items: center; justify-content: center;
-  font-size: 40px;
+  font-size: 36px;
   background: linear-gradient(180deg, var(--navy-light) 0%, var(--deep-navy) 100%);
+  position: relative;
+}
+.drama-card-img {
+  width: 100%; aspect-ratio: 2/3; object-fit: cover; display: block;
 }
 .drama-card-overlay {
   position: absolute; inset: 0;
-  background: linear-gradient(to top, rgba(5,7,26,0.9) 0%, transparent 60%);
+  background: linear-gradient(to top, rgba(5,7,26,0.95) 0%, rgba(5,7,26,0.3) 50%, transparent 100%);
   opacity: 0; transition: opacity 0.3s;
 }
 .drama-card:hover .drama-card-overlay { opacity: 1; }
 .drama-card-info {
-  position: absolute; bottom: 0; left: 0; right: 0; padding: 12px 10px;
-  opacity: 0; transform: translateY(6px); transition: all 0.3s;
+  position: absolute; bottom: 0; left: 0; right: 0; padding: 10px 8px;
+  opacity: 0; transform: translateY(4px); transition: all 0.3s;
 }
 .drama-card:hover .drama-card-info { opacity: 1; transform: translateY(0); }
-.drama-card-title { font-size: 12px; font-weight: 600; }
+.drama-card-title { font-size: 11px; font-weight: 600; margin-bottom: 3px; }
+/* Status ribbon */
+.drama-card-ribbon {
+  position: absolute; top: 8px; left: 8px;
+  padding: 2px 7px; border-radius: 3px;
+  font-size: 8px; letter-spacing: 1px;
+  font-family: 'Orbitron', monospace; font-weight: 700;
+}
+/* Continue watching progress bar */
+.drama-card-progress {
+  position: absolute; bottom: 0; left: 0; right: 0; height: 3px;
+  background: rgba(255,255,255,0.15);
+}
+.drama-card-progress-fill {
+  height: 100%; background: var(--neon-purple);
+  transition: width 0.3s;
+}
+
+/* ── DRAMA DETAIL MODAL ─────────────────────────────── */
+.drama-modal-hero {
+  position: relative; height: 260px; overflow: hidden;
+}
+.drama-modal-hero-bg {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: cover; filter: brightness(0.5);
+}
+.drama-modal-hero-ph {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 80px;
+}
+.drama-modal-hero-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, var(--navy-mid) 0%, transparent 60%);
+}
+.drama-modal-hero-content {
+  position: absolute; bottom: 24px; left: 28px; right: 28px;
+}
+.drama-modal-body { padding: 0 28px 28px; }
+.drama-modal-tabs {
+  display: flex; gap: 0; border-bottom: 1px solid rgba(255,255,255,0.07);
+  margin-bottom: 24px;
+}
+.drama-modal-tab {
+  padding: 12px 18px; cursor: pointer;
+  font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+  font-family: 'Orbitron', monospace; color: var(--text-secondary);
+  border-bottom: 2px solid transparent; transition: all 0.2s; margin-bottom: -1px;
+}
+.drama-modal-tab:hover { color: var(--text-primary); }
+.drama-modal-tab.active { color: var(--neon-cyan); border-bottom-color: var(--neon-cyan); }
+.drama-modal-panel { display: none; }
+.drama-modal-panel.active { display: block; }
+
+/* Episode list */
+.episode-list { display: flex; flex-direction: column; gap: 8px; }
+.episode-item {
+  display: flex; align-items: center; gap: 14px;
+  padding: 12px 14px; border-radius: 8px;
+  background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+  cursor: pointer; transition: all 0.2s;
+}
+.episode-item:hover { background: rgba(255,255,255,0.06); border-color: rgba(176,96,255,0.3); }
+.episode-num {
+  font-family: 'Orbitron', monospace; font-size: 12px;
+  color: var(--text-secondary); width: 28px; flex-shrink: 0; text-align: center;
+}
+.episode-thumb {
+  width: 96px; height: 54px; border-radius: 4px; overflow: hidden; flex-shrink: 0;
+  background: linear-gradient(135deg, var(--navy-light), var(--deep-navy));
+  display: flex; align-items: center; justify-content: center; font-size: 22px;
+}
+.episode-info { flex: 1; min-width: 0; }
+.episode-title { font-size: 13px; font-weight: 600; margin-bottom: 3px; }
+.episode-meta  { font-size: 10px; color: var(--text-secondary); }
+.episode-rating { font-size: 11px; color: var(--gold); flex-shrink: 0; }
+
+/* Cast grid */
+.cast-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(130px,1fr)); gap: 12px;
+}
+.cast-card {
+  text-align: center; cursor: pointer; transition: all 0.2s;
+  padding: 12px 8px; border-radius: 10px;
+  background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+}
+.cast-card:hover { background: rgba(176,96,255,0.08); border-color: rgba(176,96,255,0.3); transform: translateY(-2px); }
+.cast-avatar {
+  width: 64px; height: 64px; border-radius: 50%; margin: 0 auto 8px;
+  overflow: hidden; background: linear-gradient(135deg, var(--navy-light), #1a0540);
+  display: flex; align-items: center; justify-content: center; font-size: 28px;
+}
+.cast-avatar img { width:100%; height:100%; object-fit:cover; }
+.cast-name  { font-size: 12px; font-weight: 600; margin-bottom: 3px; }
+.cast-role  { font-size: 10px; color: var(--text-secondary); }
+
+/* User rating in modal */
+.modal-rating-row {
+  display: flex; align-items: center; gap: 12px; margin-top: 16px;
+  padding: 14px 16px; background: rgba(255,215,0,0.05);
+  border: 1px solid rgba(255,215,0,0.15); border-radius: 8px;
+}
+.modal-stars { display: flex; gap: 4px; }
+.modal-star {
+  font-size: 22px; cursor: pointer; transition: all 0.15s;
+  color: rgba(255,215,0,0.25);
+}
+.modal-star.filled { color: var(--gold); text-shadow: 0 0 8px rgba(255,215,0,0.4); }
+.modal-star:hover  { transform: scale(1.2); }
 
 /* ============================================================
    COMPANIES / GROUPS
@@ -2606,15 +2764,19 @@ body:has(a:hover) #cursor, body:has(button:hover) #cursor { transform: scale(2);
 
 <!-- ===== DRAMA ===== -->
 <div id="page-drama" class="page">
-<div class="page-wrapper">
-  <div class="section-header">
-    <div class="section-title">Drama <span>Universe</span></div>
-    <div class="section-line"></div>
-    <div class="section-badge">Netflix Mode</div>
-  </div>
+<div class="page-wrapper" style="padding:0;max-width:100%;">
+
+  <!-- Featured Banner -->
   <div class="drama-banner" id="drama-banner"></div>
-  <div id="drama-rows"></div>
+
+  <!-- Genre rows — full width Netflix style -->
+  <div style="padding:0 32px 40px;" id="drama-rows"></div>
 </div>
+</div>
+
+<!-- Drama Detail Modal -->
+<div id="drama-modal-overlay" style="position:fixed;inset:0;z-index:2200;display:none;align-items:flex-start;justify-content:center;background:rgba(5,7,26,0.93);backdrop-filter:blur(16px);overflow-y:auto;padding:40px 20px;" onclick="if(event.target===this)VELONIA.DramaPage.closeModal()">
+  <div id="drama-modal-content" style="width:100%;max-width:860px;background:var(--navy-mid);border-radius:16px;border:1px solid var(--glass-border);overflow:hidden;animation:modalIn 0.3s cubic-bezier(0.4,0,0.2,1);"></div>
 </div>
 
 <!-- ===== SOCIAL ===== -->
@@ -2795,11 +2957,11 @@ body:has(a:hover) #cursor, body:has(button:hover) #cursor { transform: scale(2);
      ============================================================ -->
 <div id="player-bar">
   <!-- Hidden embed containers — real audio source -->
-  <div id="yt-embed-container" style="position:absolute;width:0;height:0;overflow:hidden;pointer-events:none;opacity:0;">
-    <iframe id="yt-iframe" width="1" height="1" frameborder="0" allow="autoplay;encrypted-media" allowfullscreen></iframe>
+  <div id="yt-embed-container" style="position:fixed;bottom:70px;right:-9999px;width:1px;height:1px;overflow:visible;pointer-events:none;">
+    <div id="yt-player-div"></div>
   </div>
-  <div id="spotify-embed-container" style="position:absolute;bottom:85px;right:20px;width:300px;border-radius:12px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.5);display:none;z-index:1001;">
-    <iframe id="spotify-iframe" style="border-radius:12px" width="300" height="80" frameborder="0" allowtransparency="true" allow="encrypted-media"></iframe>
+  <div id="spotify-embed-container" style="position:absolute;bottom:85px;right:20px;width:320px;border-radius:12px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.5);display:none;z-index:1001;">
+    <iframe id="spotify-iframe" style="border-radius:12px;display:block;" width="320" height="152" frameborder="0" allowtransparency="true" allow="autoplay;clipboard-write;encrypted-media;fullscreen;picture-in-picture" loading="lazy"></iframe>
     <button onclick="VELONIA.EmbedPlayer.hideSpotify()" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,0.6);border:none;color:white;width:20px;height:20px;border-radius:50%;cursor:pointer;font-size:10px;display:flex;align-items:center;justify-content:center;">✕</button>
   </div>
 
@@ -2994,7 +3156,7 @@ window.VELONIA = (function() {
     PLAYER_TICK_MS: 200,
 
     // Future: swap these URLs in the DB adapter to use Supabase
-    DB_ADAPTER: 'supabase',  // 'local' | 'supabase'
+    DB_ADAPTER: 'supabase',
     SUPABASE_URL: 'https://acvgaaqlewxrivjkwtcl.supabase.co',
     SUPABASE_KEY: 'sb_publishable_mWVlUcz15rvxVKz3nup5Ig_BjLMQ-SI',
 
@@ -3978,45 +4140,7 @@ window.VELONIA = (function() {
 
     // ── Drama ────────────────────────────────────────────
     drama() {
-      const banner = document.getElementById('drama-banner'); if (!banner) return;
-      const featured = DAL.dramas.featured();
-      if (featured) {
-        banner.innerHTML = `
-          <div class="drama-banner-ph">${Utils.esc(featured.emoji)}</div>
-          <div class="drama-banner-overlay"></div>
-          <div class="drama-banner-content">
-            <div class="drama-rating">★ ${featured.rating} · ${featured.year} · ${featured.eps} episodes</div>
-            <div class="drama-banner-title">${Utils.esc(featured.title)}</div>
-            <div class="drama-banner-meta">${Utils.esc(featured.genre)}</div>
-            <div class="drama-banner-desc">${Utils.esc(featured.desc)}</div>
-            <div class="drama-btns">
-              <button class="btn-watch" onclick="VELONIA.Notify.toast('▶ Opening...')">▶ Watch Now</button>
-              <button class="btn-more-info" onclick="VELONIA.Notify.toast('ℹ More info')">ℹ More Info</button>
-            </div>
-          </div>`;
-      }
-      const rows = document.getElementById('drama-rows'); if (!rows) return;
-      const categories = ['All Dramas','Crime & Thriller','Romance & Drama'];
-      rows.innerHTML = categories.map((cat, ci) => {
-        const shows = ci === 0
-          ? DAL.dramas.all()
-          : DAL.dramas.all().filter(d => d.genre.includes(ci===1?'Thriller':'Drama'));
-        return `
-          <div class="drama-row">
-            <div class="drama-row-title">${Utils.esc(cat)}</div>
-            <div class="drama-scroll">
-              ${shows.map(d=>`
-                <div class="drama-card" onclick="VELONIA.Notify.toast('▶ ${Utils.esc(d.title)}')">
-                  <div class="drama-card-ph">${Utils.esc(d.emoji)}</div>
-                  <div class="drama-card-overlay"></div>
-                  <div class="drama-card-info">
-                    <div class="drama-card-title">${Utils.esc(d.title)}</div>
-                    <div style="font-size:10px;color:var(--text-secondary);">★ ${d.rating}</div>
-                  </div>
-                </div>`).join('')}
-            </div>
-          </div>`;
-      }).join('');
+      if (window.VELONIA.DramaPage) window.VELONIA.DramaPage.render();
     },
 
     // ── Social ───────────────────────────────────────────
@@ -5283,39 +5407,50 @@ window.VELONIA = (function() {
 
     _createYTPlayer(videoId) {
       this._ytReady = false;
-      // Destroy existing
       try { if (this._ytPlayer?.destroy) this._ytPlayer.destroy(); } catch(_) {}
       const container = document.getElementById('yt-embed-container');
       if (!container) return;
-      // Replace iframe
-      container.innerHTML = '<div id="yt-player-div"></div>';
+      let playerDiv = document.getElementById('yt-player-div');
+      if (!playerDiv) {
+        playerDiv = document.createElement('div');
+        playerDiv.id = 'yt-player-div';
+        container.appendChild(playerDiv);
+      }
       const self = this;
       this._ytPlayer = new window.YT.Player('yt-player-div', {
-        height: '1', width: '1',
+        height: '200', width: '200',
         videoId,
-        playerVars: { autoplay: 1, controls: 0, disablekb: 1, fs: 0, iv_load_policy: 3, modestbranding: 1, rel: 0 },
+        playerVars: {
+          autoplay: 1, controls: 0, disablekb: 1, fs: 0,
+          iv_load_policy: 3, modestbranding: 1, rel: 0, playsinline: 1,
+          origin: window.location.origin || 'https://localhost',
+        },
         events: {
           onReady(e) {
             self._ytReady = true;
             e.target.setVolume(self._volume);
             e.target.playVideo();
+            window.VELONIA?.Notify?.toast('▶ YouTube audio active');
           },
           onStateChange(e) {
-            // YT.PlayerState.ENDED = 0, PLAYING = 1, PAUSED = 2
-            if (e.data === 0) {
-              // Song ended — advance to next
+            if (e.data === window.YT?.PlayerState?.PLAYING) {
+              const btn = document.getElementById('play-pause-btn');
+              if (btn) btn.textContent = '⏸';
+            }
+            if (e.data === window.YT?.PlayerState?.ENDED || e.data === 0) {
               if (window.VELONIA?.MusicPage) window.VELONIA.MusicPage.nextTrack();
             }
           },
           onError(e) {
-            console.warn('[EmbedPlayer] YouTube error:', e.data);
-            window.VELONIA?.Notify?.warn('⚠ YouTube video unavailable — simulating');
+            const codes = { 2:'Invalid video ID', 5:'HTML5 error', 100:'Video not found', 101:'Embed disabled', 150:'Embed disabled' };
+            const msg = codes[e.data] || 'Error ' + e.data;
+            console.warn('[EmbedPlayer] YouTube error:', msg);
+            window.VELONIA?.Notify?.warn('⚠ YT: ' + msg + ' — simulation mode');
             self._activeMode = 'simulate';
             self._updateSourceBadge('simulate');
           }
         }
       });
-      // Start progress sync loop
       this._startYTSync();
     },
 
@@ -5337,31 +5472,26 @@ window.VELONIA = (function() {
     _playSpotify(spotifyUrl) {
       this._activeMode = 'spotify';
       this._updateSourceBadge('spotify');
-      // Stop YouTube if playing
       try { if (this._ytPlayer?.pauseVideo) this._ytPlayer.pauseVideo(); } catch(_) {}
 
-      // Extract embed URL from various Spotify URL formats
-      // https://open.spotify.com/track/xxx → https://open.spotify.com/embed/track/xxx
-      // https://open.spotify.com/album/xxx → https://open.spotify.com/embed/album/xxx
-      let embedUrl = spotifyUrl
-        .replace('https://open.spotify.com/', 'https://open.spotify.com/embed/')
-        .replace('spotify:track:', 'https://open.spotify.com/embed/track/')
-        .replace('spotify:album:', 'https://open.spotify.com/embed/album/');
-
-      // If it's just a bare track ID, wrap it
-      if (!/spotify/.test(embedUrl)) {
-        embedUrl = `https://open.spotify.com/embed/track/${embedUrl}`;
+      let embedUrl = spotifyUrl.trim();
+      embedUrl = embedUrl
+        .replace(/^spotify:track:/, 'https://open.spotify.com/track/')
+        .replace(/^spotify:album:/, 'https://open.spotify.com/album/')
+        .replace(/^spotify:playlist:/, 'https://open.spotify.com/playlist/');
+      if (embedUrl.includes('open.spotify.com') && !embedUrl.includes('/embed/')) {
+        embedUrl = embedUrl.replace('https://open.spotify.com/', 'https://open.spotify.com/embed/').split('?')[0];
       }
+      if (!embedUrl.startsWith('http')) {
+        embedUrl = 'https://open.spotify.com/embed/track/' + embedUrl;
+      }
+      embedUrl += '?utm_source=generator&theme=0';
 
       const iframe = document.getElementById('spotify-iframe');
-      if (iframe) {
-        iframe.src = embedUrl + '?utm_source=generator&theme=0';
-      }
+      if (iframe) { iframe.src = ''; setTimeout(() => { iframe.src = embedUrl; }, 50); iframe.height = '152'; }
       const panel = document.getElementById('spotify-embed-container');
       if (panel) panel.style.display = 'block';
-
-      // Show a note that Spotify needs a browser tab
-      window.VELONIA?.Notify?.toast('🎵 Spotify player opened ↑');
+      window.VELONIA?.Notify?.toast('🎵 Spotify player opened above player bar');
     },
 
     hideSpotify() {
@@ -7772,6 +7902,10 @@ window.VELONIA.App.boot = async function() {
   window.VELONIA.MusicPage = MusicPage;
   window.VELONIA.Router.register('music', () => MusicPage.render());
 
+  // Register DramaPage
+  window.VELONIA.DramaPage = DramaPage;
+  window.VELONIA.Router.register('drama', () => DramaPage.render());
+
   // Expose EmbedPlayer
   window.VELONIA.EmbedPlayer = window.VELONIA.EmbedPlayer || window.VELONIA_EMBED || EmbedPlayer;
   // Sync volume slider
@@ -8351,6 +8485,393 @@ window.VELONIA.GrpPage = GrpPage;
 //  SOCIAL PAGE MODULE v5
 // ─────────────────────────────────────────────────────────────────
 // ─────────────────────────────────────────────────────────────────
+//  DRAMA PAGE MODULE — Phase 7
+//  Netflix-style banner · Genre rows · Drama Detail Modal
+//  Episode list · Cast links · User ratings
+// ─────────────────────────────────────────────────────────────────
+const DramaPage = {
+  _userRatings: {},   // { dramaId: 1-10 } — session ratings
+
+  _esc(s) { return window.VELONIA.Utils.esc(s); },
+  _dramas() { return window.VELONIA.DAL.dramas.all(); },
+  _state()  { return window.VELONIA.State.get(); },
+
+  // ── Main render ───────────────────────────────────────
+  render() {
+    this._renderBanner();
+    this._renderRows();
+  },
+
+  // ── Featured banner ───────────────────────────────────
+  _renderBanner() {
+    const banner   = document.getElementById('drama-banner'); if (!banner) return;
+    const featured = this._dramas().find(d=>d.featured) || this._dramas()[0];
+    if (!featured) { banner.innerHTML=''; return; }
+    const genres = (featured.genre||'').split('·').map(g=>g.trim()).filter(Boolean);
+    const rating = this._userRatings[featured.id] || featured.rating;
+    banner.innerHTML = `
+      ${featured.coverUrl
+        ? `<img class="drama-banner-bg" src="${this._esc(featured.coverUrl)}" onerror="this.style.display='none'">`
+        : `<div class="drama-banner-ph">${this._esc(featured.emoji)}</div>`}
+      <div class="drama-banner-overlay"></div>
+      <div class="drama-banner-content">
+        <div class="drama-rating">
+          ${'★'.repeat(Math.round((featured.rating||0)/2))}${'☆'.repeat(5-Math.round((featured.rating||0)/2))}
+          <span style="color:var(--gold)">${featured.rating}</span>
+          <span style="color:var(--text-dim)">·</span>
+          <span>${featured.year||''}</span>
+          <span style="color:var(--text-dim)">·</span>
+          <span>${featured.eps||0} eps</span>
+          ${featured.seasons>1?`<span style="color:var(--text-dim)">·</span><span>${featured.seasons} seasons</span>`:''}
+        </div>
+        <div class="drama-banner-badges">
+          ${genres.map(g=>`<span class="drama-genre-badge">${this._esc(g)}</span>`).join('')}
+          <span class="maturity-badge">15</span>
+        </div>
+        <div class="drama-banner-title">${this._esc(featured.title)}</div>
+        <div class="drama-banner-desc">${this._esc(featured.desc||'')}</div>
+        <div class="drama-btns">
+          <button class="btn-watch" onclick="VELONIA.DramaPage.openModal(${featured.id})">
+            ▶ More Info
+          </button>
+          <button class="btn-more-info" onclick="VELONIA.DramaPage._cycleFeatured()">
+            ⟳ Next
+          </button>
+        </div>
+      </div>`;
+  },
+
+  _cycleFeatured() {
+    // Rotate which drama is shown as featured banner temporarily
+    const dramas = this._dramas();
+    if (dramas.length < 2) return;
+    const cur = dramas.findIndex(d=>d.featured);
+    const next = (cur+1) % dramas.length;
+    // Temporarily show next drama's banner without saving
+    const d = dramas[next];
+    const banner = document.getElementById('drama-banner');
+    if (!banner) return;
+    // Just re-render with next drama
+    this._renderBannerFor(d);
+  },
+
+  _renderBannerFor(d) {
+    const banner = document.getElementById('drama-banner'); if (!banner) return;
+    const genres = (d.genre||'').split('·').map(g=>g.trim()).filter(Boolean);
+    banner.innerHTML = `
+      ${d.coverUrl
+        ? `<img class="drama-banner-bg" src="${this._esc(d.coverUrl)}" onerror="this.style.display='none'">`
+        : `<div class="drama-banner-ph">${this._esc(d.emoji)}</div>`}
+      <div class="drama-banner-overlay"></div>
+      <div class="drama-banner-content">
+        <div class="drama-rating">
+          ${'★'.repeat(Math.round((d.rating||0)/2))}${'☆'.repeat(5-Math.round((d.rating||0)/2))}
+          <span style="color:var(--gold)">${d.rating}</span>
+          <span style="color:var(--text-dim)">·</span>
+          <span>${d.year||''}</span>
+          <span style="color:var(--text-dim)">·</span>
+          <span>${d.eps||0} eps</span>
+        </div>
+        <div class="drama-banner-badges">
+          ${genres.map(g=>`<span class="drama-genre-badge">${this._esc(g)}</span>`).join('')}
+        </div>
+        <div class="drama-banner-title">${this._esc(d.title)}</div>
+        <div class="drama-banner-desc">${this._esc(d.desc||'')}</div>
+        <div class="drama-btns">
+          <button class="btn-watch" onclick="VELONIA.DramaPage.openModal(${d.id})">▶ More Info</button>
+          <button class="btn-more-info" onclick="VELONIA.DramaPage.render()">← Back</button>
+        </div>
+      </div>`;
+  },
+
+  // ── Genre rows ────────────────────────────────────────
+  _renderRows() {
+    const rows   = document.getElementById('drama-rows'); if (!rows) return;
+    const dramas = this._dramas();
+    if (!dramas.length) {
+      rows.innerHTML = `<div style="text-align:center;padding:60px;color:var(--text-secondary);">
+        <div style="font-size:48px;margin-bottom:16px;">🎬</div>
+        <div style="font-family:'Orbitron',monospace;font-size:14px;">No dramas yet</div>
+        <div style="font-size:12px;color:var(--text-dim);margin-top:8px;">Add dramas in Admin → Dramas</div>
+      </div>`; return;
+    }
+
+    // Build genre map
+    const genreMap = { 'All Dramas': dramas };
+    dramas.forEach(d => {
+      (d.genre||'').split('·').map(g=>g.trim()).filter(Boolean).forEach(g => {
+        if (!genreMap[g]) genreMap[g] = [];
+        genreMap[g].push(d);
+      });
+    });
+
+    // Special rows
+    const airing    = dramas.filter(d=>d.status==='airing');
+    const announced = dramas.filter(d=>d.status==='announced');
+    const completed = dramas.filter(d=>d.status==='completed');
+    if (airing.length)    genreMap['🔴 Currently Airing']  = airing;
+    if (announced.length) genreMap['📢 Coming Soon']        = announced;
+    if (completed.length) genreMap['✅ Completed']           = completed;
+
+    rows.innerHTML = Object.entries(genreMap)
+      .filter(([_, list]) => list.length > 0)
+      .map(([title, list]) => this._rowHtml(title, list))
+      .join('');
+  },
+
+  _rowHtml(title, dramas) {
+    return `
+      <div class="drama-row">
+        <div class="drama-row-title">
+          ${this._esc(title)}
+          <span class="drama-row-count">${dramas.length}</span>
+        </div>
+        <div class="drama-scroll">
+          ${dramas.map(d => this._cardHtml(d)).join('')}
+        </div>
+      </div>`;
+  },
+
+  _cardHtml(d) {
+    const statusColors = {airing:'#00e5ff', announced:'#ffd700', completed:'#3ecf8e', cancelled:'#ff3d3d'};
+    const sColor = statusColors[d.status||'completed'] || '#607d8b';
+    const userRating = this._userRatings[d.id];
+
+    return `
+      <div class="drama-card" onclick="VELONIA.DramaPage.openModal(${d.id})">
+        ${d.coverUrl
+          ? `<img class="drama-card-img" src="${this._esc(d.coverUrl)}" onerror="this.style.display='none'">
+             <div class="drama-card-ph" style="display:none">${this._esc(d.emoji)}</div>`
+          : `<div class="drama-card-ph" style="background:linear-gradient(180deg,${d.status==='airing'?'#001a40':'var(--navy-light)'} 0%,var(--deep-navy) 100%);">${this._esc(d.emoji)}</div>`}
+        <div class="drama-card-overlay"></div>
+        <div class="drama-card-ribbon" style="background:${sColor}22;color:${sColor};border:1px solid ${sColor}44;">
+          ${d.status==='airing'?'● LIVE':d.status==='announced'?'SOON':d.status==='cancelled'?'ENDED':''}
+        </div>
+        ${userRating ? `<div style="position:absolute;top:8px;right:8px;background:rgba(255,215,0,0.9);color:black;padding:2px 6px;border-radius:4px;font-size:10px;font-family:'Orbitron',monospace;font-weight:700;">★${userRating}</div>` : ''}
+        <div class="drama-card-info">
+          <div class="drama-card-title">${this._esc(d.title)}</div>
+          <div style="display:flex;align-items:center;gap:6px;margin-top:3px;">
+            <span style="font-size:10px;color:var(--gold);">★ ${d.rating}</span>
+            <span style="font-size:9px;color:var(--text-dim);">${d.eps||0}ep</span>
+          </div>
+        </div>
+      </div>`;
+  },
+
+  // ── Drama Detail Modal ─────────────────────────────────
+  openModal(dramaId) {
+    const dramas = this._dramas();
+    const d      = dramas.find(x=>x.id==dramaId);
+    if (!d) return;
+    const state   = this._state();
+    const cast    = (d.castIds||[]).map(id=>(state.characters||[]).find(c=>c.id==id)).filter(Boolean);
+    const company = d.companyId ? (state.companies||[]).find(co=>co.id==d.companyId) : null;
+    const episodes= d.episodes || [];
+    const genres  = (d.genre||'').split('·').map(g=>g.trim()).filter(Boolean);
+    const userRating = this._userRatings[d.id] || 0;
+    const statusColors = {airing:'#00e5ff',announced:'#ffd700',completed:'#3ecf8e',cancelled:'#ff3d3d'};
+    const sColor  = statusColors[d.status||'completed']||'#607d8b';
+
+    const modal = document.getElementById('drama-modal-content');
+    modal.innerHTML = `
+      <!-- Hero -->
+      <div class="drama-modal-hero">
+        ${d.coverUrl
+          ? `<img class="drama-modal-hero-bg" src="${this._esc(d.coverUrl)}" onerror="this.style.display='none'">`
+          : `<div class="drama-modal-hero-ph" style="background:linear-gradient(135deg,#001a40,var(--deep-navy));">${this._esc(d.emoji)}</div>`}
+        <div class="drama-modal-hero-overlay"></div>
+        <button onclick="VELONIA.DramaPage.closeModal()" style="position:absolute;top:14px;right:14px;background:rgba(5,7,26,0.7);border:1px solid rgba(255,255,255,0.15);color:white;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;z-index:2;">✕</button>
+        <div class="drama-modal-hero-content">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
+            <span style="padding:3px 10px;border-radius:4px;font-size:9px;font-family:'Orbitron',monospace;background:${sColor}22;color:${sColor};border:1px solid ${sColor}44;">${(d.status||'').toUpperCase()}</span>
+            ${genres.map(g=>`<span class="drama-genre-badge" style="font-size:9px;">${this._esc(g)}</span>`).join('')}
+          </div>
+          <div style="font-family:'Orbitron',monospace;font-size:26px;font-weight:900;margin-bottom:6px;">${this._esc(d.title)}</div>
+          <div style="display:flex;align-items:center;gap:14px;font-size:11px;color:var(--text-secondary);">
+            <span style="color:var(--gold);">★ ${d.rating}</span>
+            <span>${d.year||''}</span>
+            <span>${d.eps||0} episodes</span>
+            ${d.seasons>1?`<span>${d.seasons} seasons</span>`:''}
+            ${company?`<span>${this._esc(company.name)}</span>`:''}
+          </div>
+        </div>
+      </div>
+
+      <!-- Body -->
+      <div class="drama-modal-body">
+        <!-- Action buttons -->
+        <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;">
+          <button class="btn-watch" style="font-size:12px;padding:10px 22px;" onclick="VELONIA.Notify.toast('▶ ${this._esc(d.title)} — Episode 1')">▶ Watch Now</button>
+          <button class="btn-more-info" style="font-size:12px;padding:10px 18px;" onclick="VELONIA.DramaPage._cycleFeaturedTo(${d.id})">⊞ Set as Featured</button>
+          ${episodes.length>0?`<button class="btn-more-info" style="font-size:12px;padding:10px 18px;" onclick="VELONIA.DramaPage._dramaModalTab(document.querySelector('.drama-modal-tab:nth-child(2)','episodes'),'episodes')">📋 ${episodes.length} Episodes</button>`:''}
+        </div>
+
+        <!-- User rating -->
+        <div class="modal-rating-row">
+          <div>
+            <div style="font-size:10px;color:var(--text-secondary);letter-spacing:1.5px;font-family:'Orbitron',monospace;margin-bottom:6px;">YOUR RATING</div>
+            <div class="modal-stars" id="modal-stars-${d.id}">
+              ${[1,2,3,4,5].map(n=>`
+                <span class="modal-star${userRating>=n*2?' filled':userRating>=(n*2-1)?' filled':''}"
+                  onclick="VELONIA.DramaPage.rateHalf(${d.id},${n*2})"
+                  onmouseenter="VELONIA.DramaPage._previewRating(${d.id},${n*2})"
+                  onmouseleave="VELONIA.DramaPage._restoreRating(${d.id})">★</span>`).join('')}
+            </div>
+          </div>
+          <div style="margin-left:auto;text-align:right;">
+            <div style="font-family:'Orbitron',monospace;font-size:22px;font-weight:700;color:var(--gold);">${userRating||d.rating}<span style="font-size:12px;color:var(--text-dim)">/10</span></div>
+            <div style="font-size:10px;color:var(--text-secondary);">${userRating?'Your rating':'Community avg'}</div>
+          </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="drama-modal-tabs" style="margin-top:20px;">
+          <div class="drama-modal-tab active" onclick="VELONIA.DramaPage._dramaModalTab(this,'overview')">Overview</div>
+          ${episodes.length>0?`<div class="drama-modal-tab" onclick="VELONIA.DramaPage._dramaModalTab(this,'episodes')">Episodes (${episodes.length})</div>`:''}
+          ${cast.length>0?`<div class="drama-modal-tab" onclick="VELONIA.DramaPage._dramaModalTab(this,'cast')">Cast (${cast.length})</div>`:''}
+        </div>
+
+        <!-- Overview panel -->
+        <div class="drama-modal-panel active" id="dp-overview">
+          <div style="display:grid;grid-template-columns:2fr 1fr;gap:24px;">
+            <div>
+              <div style="font-size:10px;color:var(--text-secondary);letter-spacing:2px;font-family:'Orbitron',monospace;margin-bottom:10px;">SYNOPSIS</div>
+              <div style="font-size:13px;color:var(--text-secondary);line-height:1.8;">${this._esc(d.desc||'No description.')}</div>
+              ${d.network?`<div style="margin-top:12px;font-size:11px;color:var(--text-dim);">📺 ${this._esc(d.network)}</div>`:''}
+            </div>
+            <div>
+              <div style="font-size:10px;color:var(--text-secondary);letter-spacing:2px;font-family:'Orbitron',monospace;margin-bottom:10px;">DETAILS</div>
+              ${[
+                ['Year',     d.year||'—'],
+                ['Episodes', d.eps||'—'],
+                ['Seasons',  d.seasons||1],
+                ['Status',   d.status||'—'],
+                ['Rating',   d.rating+' / 10'],
+                ['Network',  d.network||'—'],
+                ['Studio',   company?.name||'—'],
+              ].map(([k,v])=>`
+                <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:12px;">
+                  <span style="color:var(--text-secondary);">${k}</span>
+                  <span style="color:${k==='Status'?sColor:'var(--text-primary)'};">${this._esc(String(v))}</span>
+                </div>`).join('')}
+            </div>
+          </div>
+          ${cast.length>0?`
+            <div style="margin-top:20px;">
+              <div style="font-size:10px;color:var(--text-secondary);letter-spacing:2px;font-family:'Orbitron',monospace;margin-bottom:12px;">MAIN CAST</div>
+              <div style="display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;">
+                ${cast.slice(0,6).map(c=>{
+                  const img=c.imgUrls?.[0]||c.imgUrl||'';
+                  return `<div onclick="VELONIA.DramaPage.closeModal();VELONIA.Actions.openProfile(${c.id})" style="flex-shrink:0;text-align:center;cursor:pointer;transition:all 0.2s;" onmouseenter="this.style.transform='translateY(-2px)'" onmouseleave="this.style.transform=''">
+                    <div style="width:52px;height:52px;border-radius:50%;overflow:hidden;background:linear-gradient(135deg,var(--navy-light),#1a0540);display:flex;align-items:center;justify-content:center;font-size:22px;margin:0 auto 4px;">
+                      ${img?`<img src="${this._esc(img)}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">`:''}
+                      <span style="${img?'display:none':''}">${this._esc(c.emoji||'⭐')}</span>
+                    </div>
+                    <div style="font-size:10px;max-width:60px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${this._esc(c.name)}</div>
+                  </div>`;
+                }).join('')}
+                ${cast.length>6?`<div style="flex-shrink:0;display:flex;align-items:center;font-size:12px;color:var(--text-secondary);cursor:pointer;" onclick="VELONIA.DramaPage._dramaModalTab(null,'cast')">+${cast.length-6} more →</div>`:''}
+              </div>
+            </div>`:''}
+        </div>
+
+        <!-- Episodes panel -->
+        ${episodes.length>0?`
+        <div class="drama-modal-panel" id="dp-episodes">
+          <div style="font-size:10px;color:var(--text-secondary);letter-spacing:2px;font-family:'Orbitron',monospace;margin-bottom:14px;">EPISODE LIST</div>
+          <div class="episode-list">
+            ${episodes.map((ep,i) => `
+              <div class="episode-item" onclick="VELONIA.Notify.toast('▶ S${d.seasons>1?Math.ceil((i+1)/d.eps/d.seasons)+1:1}E${ep.number||i+1} — ${this._esc(ep.title||'')}')">
+                <div class="episode-num">E${ep.number||i+1}</div>
+                <div class="episode-thumb">${d.emoji}</div>
+                <div class="episode-info">
+                  <div class="episode-title">${this._esc(ep.title||'Episode '+(ep.number||i+1))}</div>
+                  <div class="episode-meta">
+                    ${ep.airDate?this._esc(ep.airDate)+' · ':''}
+                    ${this._esc(ep.synopsis?ep.synopsis.substring(0,60)+'…':'')}
+                  </div>
+                </div>
+                ${ep.rating?`<div class="episode-rating">★ ${ep.rating}</div>`:''}
+                <div style="color:var(--text-dim);font-size:14px;">▶</div>
+              </div>`).join('')}
+          </div>
+        </div>`:``}
+
+        <!-- Cast panel -->
+        ${cast.length>0?`
+        <div class="drama-modal-panel" id="dp-cast">
+          <div style="font-size:10px;color:var(--text-secondary);letter-spacing:2px;font-family:'Orbitron',monospace;margin-bottom:14px;">FULL CAST</div>
+          <div class="cast-grid">
+            ${cast.map(c=>{
+              const img=c.imgUrls?.[0]||c.imgUrl||'';
+              const cats=(c.categories||[c.type]).join('/');
+              return `
+                <div class="cast-card" onclick="VELONIA.DramaPage.closeModal();VELONIA.Actions.openProfile(${c.id})">
+                  <div class="cast-avatar">
+                    ${img?`<img src="${this._esc(img)}" onerror="this.style.display='none'">`:''}
+                    <span style="${img?'display:none':''}">${this._esc(c.emoji||'⭐')}</span>
+                  </div>
+                  <div class="cast-name">${this._esc(c.name)}</div>
+                  <div class="cast-role">${this._esc(cats)}</div>
+                  ${c.altName?`<div style="font-size:9px;color:var(--neon-purple);margin-top:2px;">// ${this._esc(c.altName)}</div>`:''}
+                </div>`;
+            }).join('')}
+          </div>
+        </div>`:``}
+      </div>`;
+
+    document.getElementById('drama-modal-overlay').style.display='flex';
+  },
+
+  closeModal() {
+    document.getElementById('drama-modal-overlay').style.display='none';
+  },
+
+  _dramaModalTab(btn, tabId) {
+    const modal = document.getElementById('drama-modal-content');
+    if (!modal) return;
+    modal.querySelectorAll('.drama-modal-tab').forEach(t=>t.classList.remove('active'));
+    modal.querySelectorAll('.drama-modal-panel').forEach(p=>p.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    const panel = modal.querySelector(`#dp-${tabId}`);
+    if (panel) panel.classList.add('active');
+  },
+
+  _cycleFeaturedTo(dramaId) {
+    const state  = window.VELONIA.State.get();
+    const dramas = [...(state.dramas||[])];
+    dramas.forEach(d => { d.featured = (d.id==dramaId); });
+    window.VELONIA.State.set('dramas', dramas);
+    window.VELONIA.App.save();
+    this.closeModal();
+    this.render();
+    window.VELONIA.Notify.success('★ Set as featured');
+  },
+
+  // ── User rating ───────────────────────────────────────
+  rateHalf(dramaId, score) {
+    this._userRatings[dramaId] = score;
+    this._restoreRating(dramaId);
+    window.VELONIA.Notify.toast(`★ Rated ${score}/10`);
+    // Optionally update modal display
+    const scoreEl = document.querySelector(`#modal-stars-${dramaId}`)?.closest('.modal-rating-row')?.querySelector('[style*="Orbitron"]');
+    if (scoreEl) scoreEl.innerHTML = `${score}<span style="font-size:12px;color:var(--text-dim)">/10</span>`;
+  },
+
+  _previewRating(dramaId, score) {
+    const stars = document.querySelectorAll(`#modal-stars-${dramaId} .modal-star`);
+    stars.forEach((s,i) => s.classList.toggle('filled', i*2+2 <= score || i*2+1 <= score && score%2===1));
+  },
+
+  _restoreRating(dramaId) {
+    const score = this._userRatings[dramaId] || 0;
+    const stars = document.querySelectorAll(`#modal-stars-${dramaId} .modal-star`);
+    stars.forEach((s,i) => s.classList.toggle('filled', (i+1)*2 <= score));
+  },
+};
+window.VELONIA.DramaPage = DramaPage;
+
+// ─────────────────────────────────────────────────────────────────
 //  MUSIC PAGE MODULE — Phase 6
 //  Releases · By Artist · By Group · Timeline
 //  Album Detail Modal · Tracklist · Prev/Next · Shuffle/Repeat
@@ -8684,11 +9205,20 @@ const MusicPage = {
     if (idx < 0) return;
     this._currentAlbumIdx = idx;
     this._currentTrackIdx = 0;
-    window.VELONIA.MediaManager.play(albums[idx]);
-    this.render();
+    const album  = albums[idx];
+    const songs  = album.songs || [];
+    const firstSong = songs[0];
+    const song   = typeof firstSong === 'object' ? firstSong : null;
+    const title  = song?.title || (typeof firstSong === 'string' ? firstSong : album.title);
+    const albumForPlayer = {
+      ...album, _trackTitle: title, _trackIdx: 0,
+      youtubeId:  song?.youtubeId  || album.youtubeId  || '',
+      spotifyUrl: song?.spotifyUrl || album.spotifyUrl || '',
+    };
+    window.VELONIA.MediaManager.play(albumForPlayer, song);
     this.closeAlbumDetail();
-    // Reopen with playing state
-    setTimeout(() => this.openAlbumDetail(albumId), 50);
+    this.render();
+    setTimeout(() => this.openAlbumDetail(albumId), 100);
   },
 
   playFromFeatured() {
@@ -8705,16 +9235,22 @@ const MusicPage = {
     this._currentAlbumIdx = idx;
     this._currentTrackIdx = trackIdx;
     const songs  = album.songs || [];
-    const song   = songs[trackIdx];
-    const title  = typeof song === 'string' ? song : (song?.title || song || album.title);
-    // Play with track title override
-    const albumForPlayer = { ...album, _trackTitle: title, _trackIdx: trackIdx };
-    window.VELONIA.MediaManager.play(albumForPlayer);
-    // Update player title
+    const raw    = songs[trackIdx];
+    const song   = typeof raw === 'object' && raw !== null ? raw : null;
+    const title  = song ? (song.title || '') : (typeof raw === 'string' ? raw : album.title);
+    const albumForPlayer = {
+      ...album, _trackTitle: title, _trackIdx: trackIdx,
+      youtubeId:  song?.youtubeId  || album.youtubeId  || '',
+      spotifyUrl: song?.spotifyUrl || album.spotifyUrl || '',
+    };
+    window.VELONIA.MediaManager.play(albumForPlayer, song);
     const titleEl = document.getElementById('player-title');
     if (titleEl) titleEl.textContent = title;
-    // Re-render tracklist highlight
-    this.openAlbumDetail(albumId);
+    setTimeout(() => {
+      if (document.getElementById('album-modal-overlay')?.style.display === 'flex') {
+        this.openAlbumDetail(albumId);
+      }
+    }, 100);
   },
 
   nextTrack() {
@@ -9891,18 +10427,22 @@ const ROADMAP_DATA = [
     ]
   },
   {
-    phase: 7, title: 'DRAMA & EPISODES', sub: 'SIRADAM — Sonraki geliştirme', color: '#ff6b35',
-    status: 'active',
+    phase: 7, title: 'DRAMA & EPISODES', sub: 'Tamamlandı — v14', color: '#ff6b35',
+    status: 'done',
     items: [
-      { icon:'📋', title:'Drama Detail Modal — Episode List', desc:'Bölüm listesi, air date, rating, synopsis',           status:'planned' },
-      { icon:'📋', title:'Cast Linkleri',                     desc:'Drama sayfasından karakter profiline tıkla',           status:'planned' },
-      { icon:'📋', title:'Drama Rating Widget',               desc:'Görsel yıldız sistemi, kullanıcı puanlama',            status:'planned' },
-      { icon:'📋', title:'Netflix-style Drama Rows',          desc:'Genre bazlı satırlar, devam et / yeni sezon badge',    status:'planned' },
+      { icon:'✅', title:'Netflix-style Banner',               desc:'Featured drama tam ekran banner, emoji/cover, genre badge, ⟳ Next buton', status:'done' },
+      { icon:'✅', title:'Genre Row\'ları',                    desc:'Her genre için yatay scroll satırı, Airing/Coming Soon/Completed özel satırlar', status:'done' },
+      { icon:'✅', title:'Drama Kartı — Status Badge',          desc:'● LIVE / SOON / ENDED ribbon, user rating badge kart üstünde', status:'done' },
+      { icon:'✅', title:'Drama Detail Modal — 3 Tab',          desc:'Overview · Episodes · Cast — tüm bilgiler tek modalda', status:'done' },
+      { icon:'✅', title:'Episode Listesi',                     desc:'Bölüm numarası, başlık, özet, air date, rating tıklanabilir', status:'done' },
+      { icon:'✅', title:'Cast Linkleri',                       desc:'Cast grid, tıkla → karakter profili açılır', status:'done' },
+      { icon:'✅', title:'Kullanıcı Puanlama (★/10)',           desc:'5 yıldız = 10 puan, hover preview, kişisel puan göstergesi', status:'done' },
+      { icon:'✅', title:'Set as Featured',                    desc:'Herhangi dramayı banner\'a taşı, kaydedilir', status:'done' },
     ]
   },
   {
-    phase: 8, title: 'PLAYER SYSTEM & MULTIPLAYER', sub: 'Phase 7 bittikten sonra', color: '#ffd700',
-    status: 'planned',
+    phase: 8, title: 'PLAYER SYSTEM & MULTIPLAYER', sub: 'SIRADAM — Sonraki geliştirme', color: '#ffd700',
+    status: 'active',
     items: [
       { icon:'📋', title:'Player Profile Sayfası',            desc:'Kendi karakterlerin, koleksiyonun, geçmişin',          status:'planned' },
       { icon:'📋', title:'Player Switcher (nav bar)',          desc:'Hızlı player geçişi, avatar + renk',                  status:'planned' },
@@ -10076,21 +10616,13 @@ window.VELONIA._confirmResetToDefault = function() {
   });
 };
 
-/** Load persisted Supabase config on startup —
- *  Credentials are hardcoded in CONFIG above.
- *  localStorage override only applies if someone manually
- *  sets a different URL via Admin → Data Manager.
- */
+/** Load persisted Supabase config on startup */
 (function _loadPersistedConfig() {
   const url = localStorage.getItem('velonia_sb_url');
   const key = localStorage.getItem('velonia_sb_key');
-  // Only override if admin has manually entered different creds
-  if (url && url !== window.VELONIA.CONFIG.SUPABASE_URL) window.VELONIA.CONFIG.SUPABASE_URL = url;
-  if (key && key !== window.VELONIA.CONFIG.SUPABASE_KEY) window.VELONIA.CONFIG.SUPABASE_KEY = key;
-  // If hardcoded URL is set, always use supabase
-  if (window.VELONIA.CONFIG.SUPABASE_URL && window.VELONIA.CONFIG.SUPABASE_URL !== 'https://YOUR_PROJECT_ID.supabase.co') {
-    window.VELONIA.CONFIG.DB_ADAPTER = 'supabase';
-  }
+  if (url) window.VELONIA.CONFIG.SUPABASE_URL = url;
+  if (key) window.VELONIA.CONFIG.SUPABASE_KEY = key;
+  if (url && key) window.VELONIA.CONFIG.DB_ADAPTER = 'supabase';
 })();
 
 </script>
