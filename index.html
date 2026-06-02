@@ -2994,9 +2994,9 @@ window.VELONIA = (function() {
     PLAYER_TICK_MS: 200,
 
     // Future: swap these URLs in the DB adapter to use Supabase
-    DB_ADAPTER: 'local',   // 'local' | 'supabase'
-    SUPABASE_URL: '',
-    SUPABASE_KEY: '',
+    DB_ADAPTER: 'supabase',  // 'local' | 'supabase'
+    SUPABASE_URL: 'https://acvgaaqlewxrivjkwtcl.supabase.co',
+    SUPABASE_KEY: 'sb_publishable_mWVlUcz15rvxVKz3nup5Ig_BjLMQ-SI',
 
     RARITIES: [
       { name: 'LEGENDARY', cssClass: 'legendary', weight: 5  },
@@ -10076,13 +10076,21 @@ window.VELONIA._confirmResetToDefault = function() {
   });
 };
 
-/** Load persisted Supabase config on startup */
+/** Load persisted Supabase config on startup —
+ *  Credentials are hardcoded in CONFIG above.
+ *  localStorage override only applies if someone manually
+ *  sets a different URL via Admin → Data Manager.
+ */
 (function _loadPersistedConfig() {
   const url = localStorage.getItem('velonia_sb_url');
   const key = localStorage.getItem('velonia_sb_key');
-  if (url) window.VELONIA.CONFIG.SUPABASE_URL = url;
-  if (key) window.VELONIA.CONFIG.SUPABASE_KEY = key;
-  if (url && key) window.VELONIA.CONFIG.DB_ADAPTER = 'supabase';
+  // Only override if admin has manually entered different creds
+  if (url && url !== window.VELONIA.CONFIG.SUPABASE_URL) window.VELONIA.CONFIG.SUPABASE_URL = url;
+  if (key && key !== window.VELONIA.CONFIG.SUPABASE_KEY) window.VELONIA.CONFIG.SUPABASE_KEY = key;
+  // If hardcoded URL is set, always use supabase
+  if (window.VELONIA.CONFIG.SUPABASE_URL && window.VELONIA.CONFIG.SUPABASE_URL !== 'https://YOUR_PROJECT_ID.supabase.co') {
+    window.VELONIA.CONFIG.DB_ADAPTER = 'supabase';
+  }
 })();
 
 </script>
