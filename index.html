@@ -4,8 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>VELONIA RP — Entertainment Universe System</title>
-<!-- Supabase JS v2 — loaded only when DB_ADAPTER='supabase' is configured -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<!-- Firebase v10 (compat mode — works like v8, no bundler needed) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <style>
 /* ============================================================
    VELONIA RP — GLOBAL DESIGN SYSTEM
@@ -3124,7 +3125,7 @@ body:has(a:hover) #cursor, body:has(button:hover) #cursor { transform: scale(2);
 // ============================================================
 //  VELONIA RP — ARCHITECTURE v2.0
 //  Single-file modular system — GitHub Pages compatible
-//  Local-first · Future Supabase-ready · IndexedDB + LS fallback
+//  Local-first · Firebase Firestore cloud sync · IndexedDB + LS fallback
 // ============================================================
 
 /**
@@ -3233,10 +3234,11 @@ window.VELONIA = (function() {
     PARTICLE_COUNT: 80,
     PLAYER_TICK_MS: 200,
 
-    // Future: swap these URLs in the DB adapter to use Supabase
-    DB_ADAPTER: 'supabase',
-    SUPABASE_URL: 'https://acvgaaqlewxrivjkwtcl.supabase.co',
-    SUPABASE_KEY: 'sb_publishable_mWVlUcz15rvxVKz3nup5Ig_BjLMQ-SI',
+    // Firebase credentials — set via Admin → Data Manager
+    DB_ADAPTER: 'firebase',
+    FIREBASE_API_KEY:   '',
+    FIREBASE_PROJECT_ID:'',
+    FIREBASE_APP_ID:    '',
 
     RARITIES: [
       { name: 'LEGENDARY', cssClass: 'legendary', weight: 5  },
@@ -3430,7 +3432,7 @@ window.VELONIA = (function() {
   // ── 2f · DATA ABSTRACTION LAYER (DAL) ────────────────────
   /**
    * All queries go here. Isolates rendering from raw State access.
-   * When Supabase migration happens: add async versions here,
+   * Firebase adapter is active — async versions here,
    * keep the same method signatures, update SaveManager adapter.
    */
   const DAL = {
@@ -3477,7 +3479,7 @@ window.VELONIA = (function() {
   /**
    * Local-first persistence.
    * Tries IndexedDB first, falls back to localStorage.
-   * Future: swap _adapter to a Supabase adapter.
+   * Firebase adapter is used for cloud sync.
    * Save structure is versioned for safe migration.
    */
   const SaveManager = (() => {
@@ -6866,7 +6868,7 @@ window.VELONIA.SaveManagerV3 = SaveManagerV3;
 // ─────────────────────────────────────────────────────────────────
 //  SECTION V3-5 · DATABASE ADAPTER INTERFACE
 //  Adapter pattern: local or supabase, same API surface.
-//  Future: swap to SupabaseAdapter without changing callers.
+//  LocalAdapter (default) or FirebaseAdapter — same API surface.
 // ─────────────────────────────────────────────────────────────────
 
 /** Local adapter (IndexedDB + localStorage, uses existing SaveManager) */
@@ -6905,298 +6907,170 @@ const LocalAdapter = {
 };
 
 // ─────────────────────────────────────────────────────────────────
-//  SUPABASE ADAPTER — Full Implementation
-//  Activate: VELONIA.CONFIG.DB_ADAPTER = 'supabase'
-//            VELONIA.CONFIG.SUPABASE_URL = 'https://xxx.supabase.co'
-//            VELONIA.CONFIG.SUPABASE_KEY = 'your-anon-public-key'
+//  FIREBASE ADAPTER — Firestore
+//  Setup: Firebase Console → New Project → Firestore → Web App
+//  Paste apiKey, projectId, appId into CONFIG above.
 //
-//  Required Supabase tables (run SQL in Supabase SQL Editor):
-//  Each table needs columns matching the entity schema.
-//  Minimum: id BIGINT PRIMARY KEY, data JSONB, updated_at TIMESTAMPTZ
-//
-//  CREATE TABLE IF NOT EXISTS velonia_characters (
-//    id BIGINT PRIMARY KEY, data JSONB NOT NULL DEFAULT '{}',
-//    updated_at TIMESTAMPTZ DEFAULT NOW()
-//  );
-//  (Repeat for: companies, groups, albums, dramas, events, awards,
-//   posts, socialAccounts, photocards, quizzes, players,
-//   notifications, archive, collection)
-//
-//  Row Level Security: For shared RP, disable RLS or set permissive
-//  anon policies. For private saves, enable per-user policies.
+//  Firestore Security Rules (Firebase Console → Firestore → Rules):
+//  rules_version = '2';
+//  service cloud.firestore {
+//    match /databases/{database}/documents {
+//      match /{document=**} { allow read, write: if true; }
+//    }
+//  }
 // ─────────────────────────────────────────────────────────────────
-const SupabaseAdapter = {
-  name: 'supabase',
-  _client: null,
-  _ready: false,
-  _syncQueue: [],   // queued writes while offline
-  _isOnline: navigator.onLine,
+const FirebaseAdapter = {
+  name: 'firebase',
+  _db: null,
+  _col: 'velonia_state',  // single Firestore collection
+  _docId: 'main',         // single document holding all state
 
-  // Store key → Supabase table name map
-  _tableMap: {
-    characters:     'velonia_characters',
-    companies:      'velonia_companies',
-    groups:         'velonia_groups',
-    albums:         'velonia_albums',
-    dramas:         'velonia_dramas',
-    events:         'velonia_events',
-    awards:         'velonia_awards',
-    posts:          'velonia_posts',
-    socialAccounts: 'velonia_social_accounts',
-    photocards:     'velonia_photocards',
-    quizzes:        'velonia_quizzes',
-    players:        'velonia_players',
-    notifications:  'velonia_notifications',
-    archive:        'velonia_archive',
-    collection:     'velonia_collection',
-    bubbleMessages: 'velonia_bubble_messages',
-  },
-
-  /**
-   * Initialize Supabase client.
-   * Called once by DB.setAdapter('supabase').
-   * Returns true if successful, false if misconfigured.
-   */
   async init() {
-    const { SUPABASE_URL, SUPABASE_KEY } = window.VELONIA.CONFIG;
-    if (!SUPABASE_URL || !SUPABASE_KEY) {
-      console.warn('[Supabase] URL or KEY not set — staying local');
+    const { FIREBASE_API_KEY, FIREBASE_PROJECT_ID, FIREBASE_APP_ID } = window.VELONIA.CONFIG;
+    if (!FIREBASE_API_KEY || !FIREBASE_PROJECT_ID) {
+      console.warn('[Firebase] Missing config — check FIREBASE_API_KEY and FIREBASE_PROJECT_ID');
       return false;
     }
-    // supabase global is loaded from CDN <script> in <head>
-    if (typeof supabase === 'undefined' && typeof window.supabase === 'undefined') {
-      console.warn('[Supabase] SDK not loaded yet — check CDN script');
-      return false;
-    }
-    const sdk = window.supabase || supabase;
     try {
-      this._client = sdk.createClient(SUPABASE_URL, SUPABASE_KEY, {
-        auth: { persistSession: false },
-        realtime: { params: { eventsPerSecond: 10 } }
-      });
-      // Test connectivity with a lightweight ping
-      const { error } = await this._client.from('velonia_characters').select('id').limit(1);
-      if (error && error.code !== 'PGRST116') {  // PGRST116 = table empty, fine
-        throw error;
+      // Initialize (safe to call multiple times)
+      if (!firebase.apps.length) {
+        firebase.initializeApp({
+          apiKey:    FIREBASE_API_KEY,
+          projectId: FIREBASE_PROJECT_ID,
+          appId:     FIREBASE_APP_ID,
+        });
       }
-      this._ready = true;
-      this._setupOnlineListener();
-      console.log('[Supabase] Connected ✓');
-      window.VELONIA.Bus.emit('supabase:connected');
+      this._db = firebase.firestore();
+      // Test connection
+      await this._db.collection(this._col).doc(this._docId).get();
+      console.log('[Firebase] Connected ✓');
+      window.VELONIA.Bus.emit('firebase:connected');
       return true;
     } catch(e) {
-      console.warn('[Supabase] Connection failed:', e.message, '— using local fallback');
-      this._ready = false;
+      console.error('[Firebase] Init error:', e.message);
       return false;
     }
   },
 
-  _tbl(storeKey) {
-    return this._tableMap[storeKey] || `velonia_${storeKey}`;
-  },
-
-  _setupOnlineListener() {
-    window.addEventListener('online',  () => { this._isOnline = true;  this._flushQueue(); });
-    window.addEventListener('offline', () => { this._isOnline = false; });
-  },
-
-  /** Flush queued offline writes when back online */
-  async _flushQueue() {
-    if (!this._ready || !this._isOnline || !this._syncQueue.length) return;
-    window.VELONIA.Notify.toast('📡 Syncing offline changes...');
-    const queue = [...this._syncQueue];
-    this._syncQueue = [];
-    for (const op of queue) {
-      try {
-        if (op.type === 'upsert') await this.upsert(op.storeKey, op.entity);
-        if (op.type === 'remove') await this.remove(op.storeKey, op.id);
-      } catch(e) {
-        console.warn('[Supabase] Flush failed for', op, e);
-      }
-    }
-    window.VELONIA.Notify.success('✅ Synced with cloud');
-  },
-
-  /** Graceful fallback: if not ready, use local and queue for sync */
-  _fallback(op) {
-    if (!this._isOnline || !this._ready) {
-      this._syncQueue.push(op);
-    }
-    return null;
-  },
-
-  /**
-   * Read all rows from a table.
-   * Each row is stored as: { id, data: {...entityFields} }
-   * We flatten: return data objects with id attached.
-   */
-  async read(storeKey) {
-    if (!this._ready) return LocalAdapter.read(storeKey);
-    try {
-      const { data, error } = await this._client
-        .from(this._tbl(storeKey))
-        .select('id, data, updated_at')
-        .order('id', { ascending: true });
-      if (error) throw error;
-      // Flatten: merge id into data object
-      return (data || []).map(row => ({
-        ...((typeof row.data === 'object' ? row.data : {})),
-        id: row.id,
-        _sbUpdatedAt: row.updated_at
-      }));
-    } catch(e) {
-      console.warn('[Supabase] read error', storeKey, e.message);
-      return LocalAdapter.read(storeKey);
-    }
-  },
-
-  /** Write entire array (bulk replace — use for import/sync) */
-  async write(storeKey, entities) {
-    if (!this._ready) { this._fallback({ type:'write', storeKey, entities }); return LocalAdapter.write(storeKey, entities); }
-    try {
-      // Delete all then insert
-      await this._client.from(this._tbl(storeKey)).delete().neq('id', -1);
-      if (entities.length === 0) return;
-      const rows = entities.map(e => ({ id: e.id, data: e }));
-      const { error } = await this._client.from(this._tbl(storeKey)).insert(rows);
-      if (error) throw error;
-    } catch(e) {
-      console.warn('[Supabase] write error', storeKey, e.message);
-      LocalAdapter.write(storeKey, entities);
-    }
-  },
-
-  /** Upsert a single entity */
-  async upsert(storeKey, entity) {
-    // Always write to local state immediately (optimistic)
-    await LocalAdapter.upsert(storeKey, entity);
-    if (!this._ready) { this._fallback({ type:'upsert', storeKey, entity }); return entity; }
-    try {
-      const row = { id: entity.id, data: entity, updated_at: new Date().toISOString() };
-      const { data, error } = await this._client
-        .from(this._tbl(storeKey))
-        .upsert(row, { onConflict: 'id' })
-        .select()
-        .single();
-      if (error) throw error;
-      return entity;
-    } catch(e) {
-      console.warn('[Supabase] upsert error', storeKey, e.message);
-      this._syncQueue.push({ type:'upsert', storeKey, entity });
-      return entity;
-    }
-  },
-
-  /** Delete by id */
-  async remove(storeKey, id) {
-    await LocalAdapter.remove(storeKey, id);
-    if (!this._ready) { this._fallback({ type:'remove', storeKey, id }); return; }
-    try {
-      const { error } = await this._client
-        .from(this._tbl(storeKey))
-        .delete()
-        .eq('id', id);
-      if (error) throw error;
-    } catch(e) {
-      console.warn('[Supabase] remove error', storeKey, e.message);
-      this._syncQueue.push({ type:'remove', storeKey, id });
-    }
-  },
-
-  /** Filter-based find (local filter after read) */
-  async find(storeKey, predicate) {
-    const all = await this.read(storeKey);
-    return predicate ? all.filter(predicate) : all;
-  },
-
-  /**
-   * FULL SYNC: Pull all tables from Supabase and overwrite local state.
-   * Use after login or manual "Sync from Cloud" action.
-   */
+  // ── Pull full state from Firestore ──────────────────
   async syncFromCloud() {
-    if (!this._ready) { window.VELONIA.Notify.error('❌ Supabase not connected'); return; }
-    window.VELONIA.Notify.toast('📡 Syncing from cloud...');
-    const tables = Object.keys(this._tableMap);
-    for (const key of tables) {
-      const rows = await this.read(key);
-      if (rows.length > 0) window.VELONIA.State.set(key, rows);
+    if (!this._db) return;
+    try {
+      const doc = await this._db.collection(this._col).doc(this._docId).get();
+      if (doc.exists) {
+        const data = doc.data();
+        // Merge cloud state into local
+        const state = window.VELONIA.State.get();
+        Object.keys(data).forEach(k => { if (Array.isArray(data[k])) state[k] = data[k]; });
+        window.VELONIA.State._state = state;
+        await window.VELONIA.SaveManager.save(state);
+        window.VELONIA.Bus.emit('firebase:synced');
+        console.log('[Firebase] Synced from cloud ✓');
+      }
+    } catch(e) {
+      console.error('[Firebase] Sync error:', e.message);
     }
-    await LocalAdapter.write('__synced__', [{ id: 1, at: new Date().toISOString() }]);
-    window.VELONIA.App.renderAll();
-    window.VELONIA.Notify.success('✅ Synced from cloud');
-    window.VELONIA.Bus.emit('supabase:synced');
   },
 
-  /**
-   * FULL PUSH: Upload entire local state to Supabase.
-   * Use after import or to overwrite cloud with local save.
-   */
+  // ── Push full state to Firestore ────────────────────
   async pushToCloud() {
-    if (!this._ready) { window.VELONIA.Notify.error('❌ Supabase not connected'); return; }
-    if (!confirm('This will overwrite ALL cloud data with your local save. Continue?')) return;
-    window.VELONIA.Notify.toast('📤 Pushing to cloud...');
-    const state  = window.VELONIA.State.get();
-    const tables = Object.keys(this._tableMap);
-    for (const key of tables) {
-      const entities = state[key] || [];
-      if (entities.length > 0) await this.write(key, entities);
+    if (!this._db) return;
+    try {
+      const state  = window.VELONIA.State.get();
+      const stores = Object.keys(state).filter(k => Array.isArray(state[k]));
+      const payload = {};
+      stores.forEach(k => { payload[k] = state[k]; });
+      payload._lastUpdated = new Date().toISOString();
+      payload._pushedBy    = window.VELONIA.PlayerSystem?.active()?.username || 'unknown';
+      await this._db.collection(this._col).doc(this._docId).set(payload, { merge: true });
+      window.VELONIA.Bus.emit('firebase:pushed');
+      // Show save indicator in nav
+      const indicator = document.getElementById('save-indicator');
+      if (indicator) {
+        indicator.textContent = '☁ Saved';
+        indicator.style.color = '#1db954';
+        setTimeout(() => {
+          if (indicator.textContent === '☁ Saved') {
+            indicator.textContent = '';
+          }
+        }, 2000);
+      }
+    } catch(e) {
+      console.error('[Firebase] Push error:', e.message);
+      window.VELONIA?.Notify?.warn('⚠ Cloud save failed — data saved locally');
     }
-    window.VELONIA.Notify.success('✅ Pushed to cloud');
-    window.VELONIA.Bus.emit('supabase:pushed');
   },
 
-  /**
-   * Subscribe to realtime changes on a table.
-   * Returns unsubscribe function.
-   * Example: SupabaseAdapter.subscribe('characters', (payload) => { ... })
-   */
+  // ── Adapter API (same surface as LocalAdapter) ──────
+  async read(storeKey) {
+    const state = window.VELONIA.State.get();
+    return state[storeKey] || [];
+  },
+
+  async write(storeKey, data) {
+    window.VELONIA.State.set(storeKey, data);
+    await window.VELONIA.SaveManager.save(window.VELONIA.State.get());
+    await this.pushToCloud();
+  },
+
+  async upsert(storeKey, entity) {
+    const arr = window.VELONIA.State.read(storeKey) || [];
+    const idx = arr.findIndex(e => e.id == entity.id);
+    if (idx >= 0) arr[idx] = window.VELONIA.Utils.touchMeta(entity);
+    else { if (!entity._meta) entity._meta = window.VELONIA.Utils.meta(); arr.push(entity); }
+    window.VELONIA.State.set(storeKey, arr);
+    await window.VELONIA.SaveManager.save(window.VELONIA.State.get());
+    await this.pushToCloud();
+    return entity;
+  },
+
+  async remove(storeKey, id) {
+    const arr = (window.VELONIA.State.read(storeKey) || []).filter(e => e.id != id);
+    window.VELONIA.State.set(storeKey, arr);
+    await window.VELONIA.SaveManager.save(window.VELONIA.State.get());
+    await this.pushToCloud();
+  },
+
+  async find(storeKey, predicate) {
+    return (window.VELONIA.State.read(storeKey) || []).filter(predicate);
+  },
+
+  // ── Realtime listener ───────────────────────────────
   subscribe(storeKey, callback) {
-    if (!this._ready || !this._client) return () => {};
-    const channel = this._client
-      .channel(`realtime:${this._tbl(storeKey)}`)
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: this._tbl(storeKey)
-      }, (payload) => {
-        callback(payload);
-        // Auto-update local state on remote change
-        if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
-          const entity = { ...(payload.new?.data || {}), id: payload.new?.id };
-          window.VELONIA.State.updateEntity(storeKey, entity.id, () => entity)
-            || window.VELONIA.State.addEntity(storeKey, entity);
+    if (!this._db) return () => {};
+    return this._db.collection(this._col).doc(this._docId)
+      .onSnapshot(doc => {
+        if (doc.exists) {
+          const data = doc.data();
+          if (data[storeKey]) {
+            window.VELONIA.State.set(storeKey, data[storeKey]);
+            callback({ storeKey, data: data[storeKey] });
+            window.VELONIA.Bus.emit('firebase:realtime', { storeKey });
+          }
         }
-        if (payload.eventType === 'DELETE') {
-          window.VELONIA.State.removeEntity(storeKey, payload.old?.id);
-        }
-        window.VELONIA.Bus.emit('supabase:realtime', { storeKey, payload });
-      })
-      .subscribe();
-    return () => this._client.removeChannel(channel);
+      }, err => console.warn('[Firebase] Realtime error:', err.message));
   },
 
-  /** Get current connection status */
   status() {
     return {
-      ready:    this._ready,
-      online:   this._isOnline,
-      queued:   this._syncQueue.length,
-      url:      window.VELONIA.CONFIG.SUPABASE_URL || '—'
+      ready:   !!this._db,
+      project: window.VELONIA.CONFIG.FIREBASE_PROJECT_ID || '—',
     };
   }
 };
+
 
 /** Active adapter — switch by config */
 const DB = {
   _adapter: LocalAdapter,
 
   async setAdapter(name) {
-    if (name === 'supabase') {
-      const ok = await SupabaseAdapter.init();
-      this._adapter = ok ? SupabaseAdapter : LocalAdapter;
+    if (name === 'firebase') {
+      const ok = await FirebaseAdapter.init();
+      this._adapter = ok ? FirebaseAdapter : LocalAdapter;
       if (!ok) {
-        console.warn('[DB] Supabase init failed — using local adapter');
-        window.VELONIA.Notify.warn('⚠ Cloud not available — using local storage');
+        console.warn('[DB] Firebase init failed — using local adapter');
+        window.VELONIA.Notify.warn('⚠ Firebase not available — using local storage');
       }
     } else {
       this._adapter = LocalAdapter;
@@ -7210,19 +7084,15 @@ const DB = {
   upsert: (key, entity) => DB._adapter.upsert(key, entity),
   remove: (key, id)     => DB._adapter.remove(key, id),
 
-  /** Sync from cloud (Supabase only) */
-  syncFromCloud: () => SupabaseAdapter.syncFromCloud(),
-  /** Push to cloud (Supabase only) */
-  pushToCloud:   () => SupabaseAdapter.pushToCloud(),
-  /** Subscribe to realtime (Supabase only) */
-  subscribe:     (key, cb) => SupabaseAdapter.subscribe(key, cb),
-  /** Connection status */
-  status:        () => ({ local: LocalAdapter.name, supabase: SupabaseAdapter.status(), active: DB._adapter.name }),
+  syncFromCloud: () => FirebaseAdapter.syncFromCloud(),
+  pushToCloud:   () => FirebaseAdapter.pushToCloud(),
+  subscribe:     (key, cb) => FirebaseAdapter.subscribe(key, cb),
+  status:        () => ({ local: LocalAdapter.name, firebase: FirebaseAdapter.status(), active: DB._adapter.name }),
 };
 
-window.VELONIA.DB           = DB;
-window.VELONIA.LocalAdapter = LocalAdapter;
-window.VELONIA.SupabaseAdapter = SupabaseAdapter;
+window.VELONIA.DB              = DB;
+window.VELONIA.LocalAdapter    = LocalAdapter;
+window.VELONIA.FirebaseAdapter = FirebaseAdapter;
 
 
 // ─────────────────────────────────────────────────────────────────
@@ -7682,46 +7552,51 @@ function _registerDynamicAdminSections() {
     const state   = window.VELONIA.State.get();
     const summary = SaveManagerV3._stateSummary(state);
     const slots   = SaveManagerV3.listSlots();
-    const sbStatus= SupabaseAdapter.status();
+    const fbStatus = window.VELONIA.FirebaseAdapter?.status() || {};
     const cfg     = window.VELONIA.CONFIG;
     area.innerHTML = `
       <div style="font-family:'Orbitron',monospace;font-size:16px;margin-bottom:20px;color:var(--neon-cyan);">💾 DATA MANAGEMENT</div>
 
-      <!-- Supabase Config -->
-      <div class="glass-card" style="padding:20px;margin-bottom:16px;border-color:${sbStatus.ready?'rgba(0,229,255,0.3)':'rgba(176,96,255,0.2)'};">
+      <!-- Firebase Config -->
+      <div class="glass-card" style="padding:20px;margin-bottom:16px;border-color:${fbStatus.ready?'rgba(255,160,0,0.4)':'rgba(176,96,255,0.2)'};">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
-          <div style="font-family:'Orbitron',monospace;font-size:12px;color:var(--text-secondary);letter-spacing:2px;">☁ SUPABASE CLOUD</div>
+          <div style="font-family:'Orbitron',monospace;font-size:12px;color:var(--text-secondary);letter-spacing:2px;">🔥 FIREBASE CLOUD</div>
           <span style="padding:3px 10px;border-radius:20px;font-size:10px;font-family:'Orbitron',monospace;
-            background:${sbStatus.ready?'rgba(0,229,255,0.15)':'rgba(255,61,61,0.1)'};
-            border:1px solid ${sbStatus.ready?'var(--neon-cyan)':'rgba(255,61,61,0.4)'};
-            color:${sbStatus.ready?'var(--neon-cyan)':'var(--danger)'};">
-            ${sbStatus.ready?'● CONNECTED':'○ LOCAL ONLY'}
+            background:${fbStatus.ready?'rgba(255,160,0,0.15)':'rgba(255,61,61,0.1)'};
+            border:1px solid ${fbStatus.ready?'rgba(255,160,0,0.5)':'rgba(255,61,61,0.4)'};
+            color:${fbStatus.ready?'#ffa000':'var(--danger)'};">
+            ${fbStatus.ready?'● CONNECTED (' + fbStatus.project + ')':'○ NOT CONNECTED'}
           </span>
-          ${sbStatus.queued>0?`<span style="padding:3px 10px;border-radius:20px;font-size:10px;background:rgba(255,215,0,0.1);border:1px solid var(--gold);color:var(--gold);">⏳ ${sbStatus.queued} queued</span>`:''}
         </div>
         <div class="admin-form">
+          <div class="form-group">
+            <label class="form-label">API Key</label>
+            <input class="form-input" id="fb-apikey" value="${cfg.FIREBASE_API_KEY||''}" placeholder="AIzaSy..." style="font-size:12px;font-family:'Space Mono',monospace;">
+          </div>
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label">Supabase Project URL</label>
-              <input class="form-input" id="sb-url" value="${cfg.SUPABASE_URL||''}" placeholder="https://xxxx.supabase.co" style="font-size:12px;">
+              <label class="form-label">Project ID</label>
+              <input class="form-input" id="fb-project" value="${cfg.FIREBASE_PROJECT_ID||''}" placeholder="my-velonia-rp" style="font-size:12px;font-family:'Space Mono',monospace;">
             </div>
             <div class="form-group">
-              <label class="form-label">Anon Public Key</label>
-              <input class="form-input" id="sb-key" type="password" value="${cfg.SUPABASE_KEY||''}" placeholder="eyJhbGciO..." style="font-size:12px;">
+              <label class="form-label">App ID</label>
+              <input class="form-input" id="fb-appid" value="${cfg.FIREBASE_APP_ID||''}" placeholder="1:123456:web:abc..." style="font-size:12px;font-family:'Space Mono',monospace;">
             </div>
           </div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;">
-            <button class="form-submit" style="padding:8px 20px;font-size:11px;" onclick="VELONIA._connectSupabase()">
-              ${sbStatus.ready?'🔄 Reconnect':'🔌 Connect'}
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;">
+            <button class="form-submit" style="padding:8px 20px;font-size:11px;" onclick="VELONIA._connectFirebase()">
+              ${fbStatus.ready?'🔄 Reconnect':'🔌 Connect'}
             </button>
-            ${sbStatus.ready?`
-              <button class="form-submit" style="padding:8px 20px;font-size:11px;background:rgba(0,229,255,0.2);border:1px solid var(--neon-cyan);" onclick="VELONIA.DB.syncFromCloud()">⬇ Pull from Cloud</button>
-              <button class="form-submit" style="padding:8px 20px;font-size:11px;background:rgba(255,45,155,0.15);border:1px solid var(--neon-pink);" onclick="VELONIA.DB.pushToCloud()">⬆ Push to Cloud</button>
+            ${fbStatus.ready?`
+              <button class="form-submit" style="padding:8px 20px;font-size:11px;background:rgba(255,160,0,0.15);border:1px solid rgba(255,160,0,0.4);color:#ffa000;" onclick="VELONIA.DB.syncFromCloud().then(()=>VELONIA.Notify.success('⬇ Synced!'))">⬇ Pull from Cloud</button>
+              <button class="form-submit" style="padding:8px 20px;font-size:11px;background:rgba(255,45,155,0.15);border:1px solid var(--neon-pink);" onclick="VELONIA.DB.pushToCloud().then(()=>VELONIA.Notify.success('⬆ Pushed!'))">⬆ Push to Cloud</button>
             `:''}
           </div>
-          <div style="margin-top:10px;font-size:11px;color:var(--text-dim);line-height:1.6;">
-            ⚠ Anon key is safe to use client-side (read/write permissions are set in Supabase RLS policies).<br>
-            For shared RP: use one project URL for the whole group. For private: use your own project.
+          <div style="margin-top:12px;font-size:11px;color:var(--text-dim);line-height:1.7;">
+            🔥 <strong style="color:var(--text-secondary);">Firebase Kurulum:</strong>
+            <a href="https://console.firebase.google.com" target="_blank" style="color:#ffa000;">console.firebase.google.com</a>
+            → New Project → Firestore Database → Web App → bu bilgileri al.<br>
+            Firestore Rules'ı <code style="background:rgba(255,255,255,0.08);padding:1px 5px;border-radius:3px;">allow read, write: if true</code> yap (test mode).
           </div>
         </div>
       </div>
@@ -7953,8 +7828,53 @@ window.VELONIA.App.boot = async function() {
   // 7. Start autosave
   SaveManagerV3.startAutosave(window.VELONIA.CONFIG.AUTOSAVE_INTERVAL_MS);
 
-  // 8. Init DB adapter from config (async — Supabase init needs network)
+  // 8. Firebase: auto-connect → pull → realtime listener
   await DB.setAdapter(window.VELONIA.CONFIG.DB_ADAPTER);
+  if (window.VELONIA.CONFIG.DB_ADAPTER === 'firebase' && FirebaseAdapter._db) {
+    // Show sync status on loading screen
+    const loadMsg = document.querySelector('#loading-screen .loading-text');
+    if (loadMsg) { loadMsg.textContent = '☁ Syncing from cloud...'; }
+
+    try {
+      await FirebaseAdapter.syncFromCloud();
+      // After pull, re-render current page to show fresh data
+      if (window.VELONIA.Router?._current) {
+        window.VELONIA.Router.navigate(window.VELONIA.Router._current);
+      }
+      window.VELONIA.Notify?.toast('☁ Cloud data loaded');
+    } catch(e) {
+      console.warn('[Auto-sync] Pull failed:', e.message);
+    }
+
+    // Realtime listener — auto-update when anyone pushes
+    FirebaseAdapter._db
+      .collection(FirebaseAdapter._col)
+      .doc(FirebaseAdapter._docId)
+      .onSnapshot(doc => {
+        if (!doc.exists) return;
+        const data  = doc.data();
+        const state = window.VELONIA.State.get();
+        let changed = false;
+        Object.keys(data).forEach(k => {
+          if (Array.isArray(data[k])) {
+            // Only update if data actually changed (compare JSON)
+            if (JSON.stringify(state[k]) !== JSON.stringify(data[k])) {
+              state[k] = data[k];
+              changed  = true;
+            }
+          }
+        });
+        if (changed) {
+          window.VELONIA.State._state = state;
+          // Re-render active page silently
+          if (window.VELONIA.Router?._current) {
+            window.VELONIA.Router.navigate(window.VELONIA.Router._current);
+          }
+          window.VELONIA.Bus.emit('firebase:realtime', { source: 'snapshot' });
+          console.log('[Firebase] Realtime update received');
+        }
+      }, err => console.warn('[Firebase] Realtime error:', err.message));
+  }
 
   // 9. Refresh player badge
   window.VELONIA.PlayerSystem._refreshPlayerUI();
@@ -10581,11 +10501,11 @@ const ROADMAP_DATA = [
     ]
   },
   {
-    phase: 2, title: 'SUPABASE CLOUD', sub: 'Tamamlandı — v4', color: '#3ecf8e',
+    phase: 2, title: 'FIREBASE CLOUD', sub: 'Tamamlandı — v19 (Firebase)', color: '#ffa000',
     status: 'done',
     items: [
-      { icon:'✅', title:'Supabase JS SDK CDN Entegrasyonu',  desc:'v2 SDK, <head>\'de yüklü, async init',                status:'done' },
-      { icon:'✅', title:'SupabaseAdapter — Full Implementation',desc:'read, write, upsert, remove, find — tüm storeKey\'ler', status:'done' },
+      { icon:'✅', title:'Firebase JS SDK CDN Entegrasyonu',  desc:'v10 compat SDK, <head>\'de yüklü, async init',         status:'done' },
+      { icon:'✅', title:'FirebaseAdapter — Firestore Implementation',desc:'read, write, upsert, remove, find + realtime onSnapshot', status:'done' },
       { icon:'✅', title:'Optimistic Local-First Writes',      desc:'Önce local yaz, sonra cloud\'a sync',                 status:'done' },
       { icon:'✅', title:'Offline Queue + Auto-Flush',         desc:'Offline\'da kuyruğa al, online olunca gönder',         status:'done' },
       { icon:'✅', title:'Sync from Cloud / Push to Cloud',    desc:'Full two-way sync, Admin → Data Manager\'dan',        status:'done' },
@@ -10817,22 +10737,31 @@ window.addEventListener('load', () => VELONIA.boot());
 //  GLOBAL HELPERS — window.VELONIA.* convenience shims
 // ─────────────────────────────────────────────────────────────────
 
-/** Connect/reconnect Supabase from the Data Manager UI */
-window.VELONIA._connectSupabase = async function() {
-  const url = document.getElementById('sb-url')?.value.trim();
-  const key = document.getElementById('sb-key')?.value.trim();
-  if (!url || !key) { window.VELONIA.Notify.error('❌ URL ve Key gerekli'); return; }
-  window.VELONIA.CONFIG.SUPABASE_URL = url;
-  window.VELONIA.CONFIG.SUPABASE_KEY = key;
-  // Persist config in localStorage for next load
-  try {
-    localStorage.setItem('velonia_sb_url', url);
-    localStorage.setItem('velonia_sb_key', key);
-  } catch(_) {}
-  window.VELONIA.Notify.toast('🔌 Bağlanıyor...');
-  await window.VELONIA.DB.setAdapter('supabase');
-  window.VELONIA.AdminManager.renderSection('data');
-};
+/** Connect/reconnect Firebase from the Data Manager UI */
+async function connectFirebase() {
+  const apiKey  = document.getElementById('fb-apikey')?.value.trim();
+  const project = document.getElementById('fb-project')?.value.trim();
+  const appId   = document.getElementById('fb-appid')?.value.trim();
+  if (!apiKey || !project) { window.VELONIA.Notify.error('❌ API Key and Project ID required'); return; }
+  window.VELONIA.CONFIG.FIREBASE_API_KEY    = apiKey;
+  window.VELONIA.CONFIG.FIREBASE_PROJECT_ID = project;
+  window.VELONIA.CONFIG.FIREBASE_APP_ID     = appId;
+  window.VELONIA.CONFIG.DB_ADAPTER          = 'firebase';
+  // Save to localStorage so it persists
+  localStorage.setItem('velonia_fb_apikey',  apiKey);
+  localStorage.setItem('velonia_fb_project', project);
+  localStorage.setItem('velonia_fb_appid',   appId);
+  const adapter = await window.VELONIA.DB.setAdapter('firebase');
+  if (adapter.name === 'firebase') {
+    await window.VELONIA.DB.syncFromCloud();
+    window.VELONIA.Notify.success('✅ Connected to Firebase!');
+    window.VELONIA.AdminManager.renderSection('data');
+  } else {
+    window.VELONIA.Notify.error('❌ Connection failed — check your Firebase config');
+  }
+}
+window.VELONIA._connectFirebase = connectFirebase;
+
 
 /** Reset to default data with confirmation */
 window.VELONIA._confirmResetToDefault = function() {
@@ -10849,11 +10778,15 @@ window.VELONIA._confirmResetToDefault = function() {
 
 /** Load persisted Supabase config on startup */
 (function _loadPersistedConfig() {
-  const url = localStorage.getItem('velonia_sb_url');
-  const key = localStorage.getItem('velonia_sb_key');
-  if (url) window.VELONIA.CONFIG.SUPABASE_URL = url;
-  if (key) window.VELONIA.CONFIG.SUPABASE_KEY = key;
-  if (url && key) window.VELONIA.CONFIG.DB_ADAPTER = 'supabase';
+  // Load Firebase config from localStorage (set via Admin → Data Manager)
+  const apiKey  = localStorage.getItem('velonia_fb_apikey');
+  const project = localStorage.getItem('velonia_fb_project');
+  const appId   = localStorage.getItem('velonia_fb_appid');
+  if (apiKey)  window.VELONIA.CONFIG.FIREBASE_API_KEY    = apiKey;
+  if (project) window.VELONIA.CONFIG.FIREBASE_PROJECT_ID = project;
+  if (appId)   window.VELONIA.CONFIG.FIREBASE_APP_ID     = appId;
+  // If credentials available, use firebase adapter
+  if (apiKey && project) window.VELONIA.CONFIG.DB_ADAPTER = 'firebase';
 })();
 
 </script>
