@@ -3564,16 +3564,26 @@ window.VELONIA = (function() {
       async save(stateObj) {
         const envelope = _envelope(stateObj);
         const raw      = JSON.stringify(envelope);
+        // 1. Save locally (IDB + localStorage backup)
         try {
           await _idbSet(CONFIG.SAVE_KEY, raw);
-          // Also keep LS as a hot-reload backup
           try { localStorage.setItem(CONFIG.SAVE_KEY + '_bak', raw); } catch(_) {}
         } catch(e) {
-          // IDB failed — fall back to localStorage
           try { localStorage.setItem(CONFIG.SAVE_KEY, raw); } catch(_) {}
+        }
+        // 2. Also save to localStorage directly for fast reload
+        try { localStorage.setItem(CONFIG.SAVE_KEY, raw); } catch(_) {}
+        // 3. Push to Firebase if connected (debounced — max 1 push per 500ms)
+        if (window.VELONIA?.CONFIG?.DB_ADAPTER === 'firebase'
+            && window.VELONIA?.FirebaseAdapter?._db) {
+          clearTimeout(SaveManager._fbTimer);
+          SaveManager._fbTimer = setTimeout(() => {
+            window.VELONIA.FirebaseAdapter.pushToCloud();
+          }, 500);
         }
         Bus.emit('state:saved');
       },
+      _fbTimer: null,
 
       /** Load state — IDB first, LS fallback */
       async load() {
@@ -4589,64 +4599,13 @@ window.VELONIA = (function() {
 
     // ── Admin section helpers (characters) ───────────
     showAddCharForm(area, existing=null) {
-      const isEdit = !!existing;
-      area.innerHTML = `
-        <div style="font-family:'Orbitron',monospace;font-size:16px;margin-bottom:20px;">${isEdit?'✏ Edit':'➕ Add'} Character</div>
-        <div class="admin-form">
-          <div class="form-row">
-            <div class="form-group"><label class="form-label">Name</label><input class="form-input" id="af-name" value="${isEdit?Utils.esc(existing.name):''}" placeholder="Character Name"></div>
-            <div class="form-group"><label class="form-label">Alt Name</label><input class="form-input" id="af-altname" value="${isEdit?Utils.esc(existing.altName||''):''}"></div>
-          </div>
-          <div class="form-row">
-            <div class="form-group"><label class="form-label">Type</label><select class="form-select" id="af-type">${['idol','actor','criminal','superhuman','human'].map(t=>`<option value="${t}"${isEdit&&existing.type===t?' selected':''}>${t}</option>`).join('')}</select></div>
-            <div class="form-group"><label class="form-label">Emoji</label><input class="form-input" id="af-emoji" value="${isEdit?Utils.esc(existing.emoji||'⭐'):'⭐'}" style="font-size:20px"></div>
-          </div>
-          <div class="form-row">
-            <div class="form-group"><label class="form-label">Age</label><input class="form-input" id="af-age" type="number" value="${isEdit?existing.age:20}"></div>
-            <div class="form-group"><label class="form-label">Nationality</label><input class="form-input" id="af-nat" value="${isEdit?Utils.esc(existing.nationality||'Korean'):'Korean'}"></div>
-          </div>
-          <div class="form-group"><label class="form-label">Company</label><input class="form-input" id="af-company" value="${isEdit?Utils.esc(existing.company||''):''}"></div>
-          <div class="form-group"><label class="form-label">Tags (comma separated)</label><input class="form-input" id="af-tags" value="${isEdit?(existing.tags||[]).map(t=>Utils.esc(t)).join(', '):''}"></div>
-          <div class="form-group"><label class="form-label">Bio</label><textarea class="form-textarea" id="af-bio">${isEdit?Utils.esc(existing.bio||''):''}</textarea></div>
-          <div class="form-group"><label class="form-label">Image URL (optional)</label><input class="form-input" id="af-img" value="${isEdit?Utils.esc(existing.imgUrl||''):''}"></div>
-          <div style="display:flex;gap:10px">
-            <button class="form-submit" onclick="VELONIA.Actions.saveChar(${isEdit?existing.id:'null'})">${isEdit?'Update':'Create'} Character</button>
-            <button class="form-submit" style="background:rgba(255,255,255,0.1)" onclick="VELONIA.AdminManager.renderSection('characters')">Cancel</button>
-          </div>
-        </div>`;
+      // Delegate to EntityCRUD — uses FormBuilder with multiselect categories
+      window.VELONIA.EntityCRUD.openForm('characters', existing?.id || null);
     },
 
-    saveChar(id) {
-      const name = document.getElementById('af-name').value.trim();
-      if (!name) { Notify.error('❌ Name required'); return; }
-      const char = {
-        name, altName: document.getElementById('af-altname').value.trim(),
-        type: document.getElementById('af-type').value,
-        emoji: document.getElementById('af-emoji').value.trim()||'⭐',
-        age: parseInt(document.getElementById('af-age').value)||20,
-        nationality: document.getElementById('af-nat').value.trim()||'Korean',
-        company: document.getElementById('af-company').value.trim(),
-        tags: document.getElementById('af-tags').value.split(',').map(t=>t.trim()).filter(Boolean),
-        bio: document.getElementById('af-bio').value.trim(),
-        imgUrl: document.getElementById('af-img').value.trim(),
-        mode: name, modes: {},
-        stats: { charisma:70, power:70, mystery:70, influence:70, danger:30 }
-      };
-      if (id===null||id==='null') {
-        char.id = Utils.newId(); char._meta = Utils.meta(char.tags);
-        State.addEntity('characters', char);
-        Notify.success('✅ Character created');
-      } else {
-        State.updateEntity('characters', id, existing => ({
-          ...existing, ...char, id: existing.id,
-          stats: existing.stats  // preserve existing stats
-        }));
-        Notify.success('✅ Character updated');
-      }
-      App.save(); App.renderAll(); AdminManager.renderSection('characters');
-    },
+    saveChar(id) { /* handled by EntityCRUD */ },
 
-    editChar(id) { this.showAddCharForm(document.getElementById('admin-content-area'), DAL.chars.byId(id)); },
+    editChar(id) { window.VELONIA.EntityCRUD.openForm('characters', id); },
 
     deleteChar(id) {
       if(!confirm('Delete this character?')) return;
@@ -5277,7 +5236,7 @@ window.VELONIA = (function() {
       return new Date(last).toDateString()===new Date().toDateString()?1:0;
     },
 
-    /** Trigger an async save */
+    /** Trigger an async save — local + Firebase (handled by SaveManager) */
     save() { return SaveManager.save(State.get()); },
 
     /** Re-render dashboard + landing stats after bulk changes */
@@ -6617,6 +6576,10 @@ const FormBuilder = {
         case 'multiselect': {
           const chips = document.querySelectorAll(`#ff-${f.key}-chips .ms-chip.active`);
           data[f.key] = Array.from(chips).map(c => c.dataset.value);
+          // Keep legacy 'type' field in sync with first category
+          if (f.key === 'categories' && data[f.key].length > 0) {
+            data.type = data[f.key][0];
+          }
           break; }
         case 'relations': {
           const checkboxes = document.querySelectorAll(`#ff-${f.key}-rels input[type="checkbox"]:checked`);
@@ -6959,13 +6922,20 @@ const FirebaseAdapter = {
       const doc = await this._db.collection(this._col).doc(this._docId).get();
       if (doc.exists) {
         const data = doc.data();
-        // Merge cloud state into local
         const state = window.VELONIA.State.get();
-        Object.keys(data).forEach(k => { if (Array.isArray(data[k])) state[k] = data[k]; });
+        // Pull every array store from Firestore — cloud is source of truth
+        Object.keys(data).forEach(k => {
+          if (Array.isArray(data[k])) state[k] = data[k];
+        });
         window.VELONIA.State._state = state;
-        await window.VELONIA.SaveManager.save(state);
+        // Save locally so refresh doesn't lose data
+        try { localStorage.setItem(window.VELONIA.CONFIG.SAVE_KEY, JSON.stringify(state)); } catch(_) {}
         window.VELONIA.Bus.emit('firebase:synced');
         console.log('[Firebase] Synced from cloud ✓');
+      } else {
+        // Document doesn't exist yet — push local data up
+        console.log('[Firebase] No cloud data yet — pushing local state');
+        await this.pushToCloud();
       }
     } catch(e) {
       console.error('[Firebase] Sync error:', e.message);
@@ -6976,28 +6946,29 @@ const FirebaseAdapter = {
   async pushToCloud() {
     if (!this._db) return;
     try {
-      const state  = window.VELONIA.State.get();
-      const stores = Object.keys(state).filter(k => Array.isArray(state[k]));
-      const payload = {};
-      stores.forEach(k => { payload[k] = state[k]; });
-      payload._lastUpdated = new Date().toISOString();
-      payload._pushedBy    = window.VELONIA.PlayerSystem?.active()?.username || 'unknown';
-      await this._db.collection(this._col).doc(this._docId).set(payload, { merge: true });
-      window.VELONIA.Bus.emit('firebase:pushed');
-      // Show save indicator in nav
-      const indicator = document.getElementById('save-indicator');
-      if (indicator) {
-        indicator.textContent = '☁ Saved';
-        indicator.style.color = '#1db954';
-        setTimeout(() => {
-          if (indicator.textContent === '☁ Saved') {
-            indicator.textContent = '';
+      const state   = window.VELONIA.State.get();
+      const payload = { _lastUpdated: new Date().toISOString() };
+      // Push every array store — skip non-serializable values
+      Object.keys(state).forEach(k => {
+        try {
+          if (Array.isArray(state[k])) {
+            // Deep clone to avoid Firestore issues with undefined values
+            payload[k] = JSON.parse(JSON.stringify(state[k]));
           }
-        }, 2000);
+        } catch(_) {}
+      });
+      // Use set() — not merge — so deletions propagate
+      await this._db.collection(this._col).doc(this._docId).set(payload);
+      window.VELONIA.Bus.emit('firebase:pushed');
+      // Nav indicator
+      const ind = document.getElementById('save-indicator');
+      if (ind) {
+        ind.textContent = '☁'; ind.style.color = '#1db954';
+        setTimeout(() => { if (ind.textContent === '☁') ind.textContent = ''; }, 1500);
       }
     } catch(e) {
       console.error('[Firebase] Push error:', e.message);
-      window.VELONIA?.Notify?.warn('⚠ Cloud save failed — data saved locally');
+      window.VELONIA?.Notify?.warn('⚠ Cloud save failed — data safe locally');
     }
   },
 
@@ -7010,7 +6981,6 @@ const FirebaseAdapter = {
   async write(storeKey, data) {
     window.VELONIA.State.set(storeKey, data);
     await window.VELONIA.SaveManager.save(window.VELONIA.State.get());
-    await this.pushToCloud();
   },
 
   async upsert(storeKey, entity) {
@@ -7020,7 +6990,6 @@ const FirebaseAdapter = {
     else { if (!entity._meta) entity._meta = window.VELONIA.Utils.meta(); arr.push(entity); }
     window.VELONIA.State.set(storeKey, arr);
     await window.VELONIA.SaveManager.save(window.VELONIA.State.get());
-    await this.pushToCloud();
     return entity;
   },
 
@@ -7028,7 +6997,6 @@ const FirebaseAdapter = {
     const arr = (window.VELONIA.State.read(storeKey) || []).filter(e => e.id != id);
     window.VELONIA.State.set(storeKey, arr);
     await window.VELONIA.SaveManager.save(window.VELONIA.State.get());
-    await this.pushToCloud();
   },
 
   async find(storeKey, predicate) {
@@ -7846,32 +7814,56 @@ window.VELONIA.App.boot = async function() {
       console.warn('[Auto-sync] Pull failed:', e.message);
     }
 
-    // Realtime listener — auto-update when anyone pushes
+    // Realtime listener — updates when anyone else pushes
+    let _ignoreNextSnapshot = false; // flag to skip our own pushes
+    const _myId = 'client_' + Math.random().toString(36).slice(2, 8);
+
+    // Patch pushToCloud to set ignore flag
+    const _origPush = FirebaseAdapter.pushToCloud.bind(FirebaseAdapter);
+    FirebaseAdapter.pushToCloud = async function() {
+      _ignoreNextSnapshot = true;
+      await _origPush();
+      // Reset after 3s in case snapshot is delayed
+      setTimeout(() => { _ignoreNextSnapshot = false; }, 3000);
+    };
+
     FirebaseAdapter._db
       .collection(FirebaseAdapter._col)
       .doc(FirebaseAdapter._docId)
       .onSnapshot(doc => {
         if (!doc.exists) return;
+
+        // Skip our own writes
+        if (_ignoreNextSnapshot) {
+          _ignoreNextSnapshot = false;
+          return;
+        }
+
         const data  = doc.data();
         const state = window.VELONIA.State.get();
         let changed = false;
+
         Object.keys(data).forEach(k => {
-          if (Array.isArray(data[k])) {
-            // Only update if data actually changed (compare JSON)
-            if (JSON.stringify(state[k]) !== JSON.stringify(data[k])) {
-              state[k] = data[k];
-              changed  = true;
-            }
+          if (!Array.isArray(data[k])) return;
+          if (JSON.stringify(state[k]) !== JSON.stringify(data[k])) {
+            state[k] = data[k];
+            changed  = true;
           }
         });
+
         if (changed) {
           window.VELONIA.State._state = state;
-          // Re-render active page silently
+          // Save locally
+          try { localStorage.setItem(window.VELONIA.CONFIG.SAVE_KEY, JSON.stringify(state)); } catch(_) {}
+          // Re-render active page
           if (window.VELONIA.Router?._current) {
             window.VELONIA.Router.navigate(window.VELONIA.Router._current);
           }
+          // Show toast notification
+          const pusher = data._pushedBy || 'someone';
+          window.VELONIA.Notify?.toast(`🔄 Updated by ${pusher}`);
           window.VELONIA.Bus.emit('firebase:realtime', { source: 'snapshot' });
-          console.log('[Firebase] Realtime update received');
+          console.log('[Firebase] Realtime update from:', pusher);
         }
       }, err => console.warn('[Firebase] Realtime error:', err.message));
   }
@@ -7902,6 +7894,20 @@ window.VELONIA.App.boot = async function() {
   // Register CharPage & re-register characters route
   window.VELONIA.CharPage = CharPage;
   window.VELONIA.Router.register('characters', () => CharPage.render());
+
+  // Migrate: characters with empty categories[] → populate from type field
+  const _chars = window.VELONIA.State.read('characters') || [];
+  let _migrated = false;
+  _chars.forEach(c => {
+    if (!c.categories || c.categories.length === 0) {
+      c.categories = [c.type || 'human'];
+      _migrated = true;
+    }
+  });
+  if (_migrated) {
+    window.VELONIA.State.set('characters', _chars);
+    window.VELONIA.App.save();
+  }
 
   // Register CoPage + GrpPage
   window.VELONIA.CoPage  = CoPage;
