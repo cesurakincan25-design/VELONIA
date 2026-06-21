@@ -1944,6 +1944,7 @@ body:has(a:hover) #cursor, body:has(button:hover) #cursor { transform: scale(2);
 /* ── comment-input:focus already defined above ─────── */
 .comment-input:focus { border-color: var(--neon-purple); }
 
+.song-album-btn { opacity:0; transition:opacity 0.15s; }
 /* ============================================================
    AWARDS SYSTEM
    ============================================================ */
@@ -2775,9 +2776,10 @@ body:has(a:hover) #cursor, body:has(button:hover) #cursor { transform: scale(2);
 
   <!-- Sub-tabs -->
   <div class="social-tabs" id="music-tabs" style="margin-bottom:24px;">
-    <button class="social-tab active" onclick="VELONIA.MusicPage.switchTab(this,'releases')">💿 All Releases</button>
-    <button class="social-tab" onclick="VELONIA.MusicPage.switchTab(this,'artists')">🎤 By Artist</button>
-    <button class="social-tab" onclick="VELONIA.MusicPage.switchTab(this,'groups')">⭐ By Group</button>
+    <button class="social-tab active" onclick="VELONIA.MusicPage.switchTab(this,'releases')">💿 Releases</button>
+    <button class="social-tab" onclick="VELONIA.MusicPage.switchTab(this,'songs')">🎵 Songs</button>
+    <button class="social-tab" onclick="VELONIA.MusicPage.switchTab(this,'artists')">🎤 Artists</button>
+    <button class="social-tab" onclick="VELONIA.MusicPage.switchTab(this,'groups')">⭐ Groups</button>
     <button class="social-tab" onclick="VELONIA.MusicPage.switchTab(this,'timeline')">📅 Timeline</button>
   </div>
 
@@ -2800,6 +2802,7 @@ body:has(a:hover) #cursor, body:has(button:hover) #cursor { transform: scale(2);
 
   <!-- Tab panels -->
   <div id="mt-releases" class="music-tab-panel"></div>
+  <div id="mt-songs"    class="music-tab-panel" style="display:none;"></div>
   <div id="mt-artists"  class="music-tab-panel" style="display:none;"></div>
   <div id="mt-groups"   class="music-tab-panel" style="display:none;"></div>
   <div id="mt-timeline" class="music-tab-panel" style="display:none;"></div>
@@ -6177,11 +6180,11 @@ const FormBuilder = {
       .map(f => this._fieldHtml(f, defaults[f.key], state))
       .join('');
 
-    // Separate sections for complex types
     const statsField   = schema.fields.find(f => f.type === 'stats');
     const modesField   = schema.fields.find(f => f.type === 'modes');
     const customField  = schema.fields.find(f => f.type === 'customfields');
     const imagesField  = schema.fields.find(f => f.type === 'images');
+    const songsField   = schema.fields.find(f => f.type === 'songs');
 
     container.innerHTML = `
       <div style="font-family:'Orbitron',monospace;font-size:16px;margin-bottom:20px;color:var(--neon-cyan)">
@@ -6189,12 +6192,11 @@ const FormBuilder = {
       </div>
       <div class="admin-form" id="dyn-form-${schemaKey}">
         ${fieldsHtml}
-
-        ${statsField ? this._statsSection(defaults[statsField.key] || {}) : ''}
-        ${modesField ? this._modesSection(defaults[modesField.key] || {}) : ''}
+        ${statsField  ? this._statsSection(defaults[statsField.key] || {}) : ''}
+        ${modesField  ? this._modesSection(defaults[modesField.key] || {}) : ''}
         ${customField ? this._customFieldsSection(defaults[customField.key] || {}) : ''}
         ${imagesField ? this._imagesSection(defaults[imagesField.key] || [], defaults) : ''}
-
+        ${songsField  ? this._songsSection(defaults[songsField.key]  || []) : ''}
         <div style="display:flex;gap:10px;margin-top:8px;">
           <button class="form-submit" id="dyn-save-btn">
             ${isEdit ? 'Update' : 'Create'} ${schema.label}
@@ -6228,6 +6230,91 @@ const FormBuilder = {
     // Wire mode add button
     const modeAddBtn = container.querySelector('#mode-add-btn');
     if (modeAddBtn) modeAddBtn.onclick = () => this._addModeRow(container);
+    // Wire song add button
+    const songAddBtn = container.querySelector('#song-add-btn');
+    if (songAddBtn) songAddBtn.onclick = () => this._addSongRow(container);
+  },
+
+  _songsSection(songs) {
+    const rows = Array.isArray(songs) ? songs.map((s, i) => {
+      const title   = typeof s === 'string' ? s         : (s.title     || '');
+      const dur     = typeof s === 'object' ? (s.duration  || '') : '';
+      const feat    = typeof s === 'object' ? (s.featuring || '') : '';
+      const ytId    = typeof s === 'object' ? (s.youtubeId  || '') : '';
+      const spUrl   = typeof s === 'object' ? (s.spotifyUrl || '') : '';
+      const isTitle = typeof s === 'object' ? !!s.isTitle : (i === 0);
+      return `
+        <div class="song-row" data-idx="${i}"
+          style="background:${isTitle?'rgba(176,96,255,0.08)':'rgba(255,255,255,0.03)'};border:1px solid ${isTitle?'rgba(176,96,255,0.3)':'rgba(255,255,255,0.07)'};border-radius:10px;padding:12px 14px;margin-bottom:8px;">
+          <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center;">
+            <span class="song-idx" style="font-size:11px;color:var(--text-dim);font-family:'Space Mono',monospace;width:22px;text-align:center;flex-shrink:0;">${i+1}</span>
+            <input class="form-input song-title" value="${this._esc(title)}" placeholder="Track title" style="flex:1;">
+            <input class="form-input song-dur" value="${this._esc(dur)}" placeholder="3:30" style="width:56px;text-align:center;font-family:'Space Mono',monospace;font-size:11px;">
+            <label style="display:flex;align-items:center;gap:4px;cursor:pointer;flex-shrink:0;font-size:11px;color:${isTitle?'var(--neon-purple)':'var(--text-secondary)'};">
+              <input type="checkbox" class="song-is-title" ${isTitle?'checked':''} style="accent-color:var(--neon-purple);"
+                onchange="const r=this.closest('.song-row');r.style.background=this.checked?'rgba(176,96,255,0.08)':'rgba(255,255,255,0.03)';r.style.borderColor=this.checked?'rgba(176,96,255,0.3)':'rgba(255,255,255,0.07)';">
+              Title
+            </label>
+            <button onclick="this.closest('.song-row').remove();VELONIA.FormBuilder._reindexSongRows()" style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:16px;flex-shrink:0;">✕</button>
+          </div>
+          <input class="form-input song-feat" value="${this._esc(feat)}" placeholder="feat. (optional)" style="width:100%;font-size:11px;margin-bottom:6px;">
+          <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px;">
+            <span style="font-size:9px;padding:2px 7px;border-radius:3px;background:rgba(255,0,0,0.15);color:#ff5555;border:1px solid rgba(255,0,0,0.3);font-family:'Orbitron',monospace;flex-shrink:0;">YT</span>
+            <input class="form-input song-yt" value="${this._esc(ytId)}" placeholder="YouTube Video ID  (dQw4w9WgXcQ)" style="flex:1;font-size:11px;font-family:'Space Mono',monospace;${ytId?'border-color:rgba(255,0,0,0.4);color:#ff9999;':''}">
+          </div>
+          <div style="display:flex;gap:6px;align-items:center;">
+            <span style="font-size:9px;padding:2px 7px;border-radius:3px;background:rgba(30,215,96,0.12);color:#1db954;border:1px solid rgba(30,215,96,0.3);font-family:'Orbitron',monospace;flex-shrink:0;">SP</span>
+            <input class="form-input song-sp" value="${this._esc(spUrl)}" placeholder="Spotify URL  (https://open.spotify.com/track/...)" style="flex:1;font-size:11px;${spUrl?'border-color:rgba(30,215,96,0.4);color:#1db954;':''}">
+          </div>
+        </div>`;
+    }).join('') : '';
+    return `
+      <div style="border:1px solid rgba(176,96,255,0.25);border-radius:10px;padding:16px;margin-top:4px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+          <div style="font-family:'Orbitron',monospace;font-size:12px;color:var(--neon-purple);">🎵 TRACKLIST</div>
+          <div style="font-size:10px;color:var(--text-dim);">YT = YouTube ID · SP = Spotify URL</div>
+        </div>
+        <div id="song-rows">${rows}</div>
+        <button class="admin-btn-add" id="song-add-btn" style="width:100%;margin-top:8px;padding:8px;font-size:11px;">+ Add Track</button>
+      </div>`;
+  },
+
+  _addSongRow(container) {
+    const rows = container.querySelector('#song-rows'); if (!rows) return;
+    const idx  = rows.querySelectorAll('.song-row').length;
+    const div  = document.createElement('div');
+    div.className = 'song-row'; div.dataset.idx = idx;
+    div.style.cssText = 'background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:12px 14px;margin-bottom:8px;';
+    div.innerHTML = `
+      <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center;">
+        <span class="song-idx" style="font-size:11px;color:var(--text-dim);font-family:'Space Mono',monospace;width:22px;text-align:center;flex-shrink:0;">${idx+1}</span>
+        <input class="form-input song-title" placeholder="Track title" style="flex:1;">
+        <input class="form-input song-dur" placeholder="3:30" style="width:56px;text-align:center;font-family:'Space Mono',monospace;font-size:11px;">
+        <label style="display:flex;align-items:center;gap:4px;cursor:pointer;flex-shrink:0;font-size:11px;color:var(--text-secondary);">
+          <input type="checkbox" class="song-is-title" style="accent-color:var(--neon-purple);"
+            onchange="const r=this.closest('.song-row');r.style.background=this.checked?'rgba(176,96,255,0.08)':'rgba(255,255,255,0.03)';r.style.borderColor=this.checked?'rgba(176,96,255,0.3)':'rgba(255,255,255,0.07)';">
+          Title
+        </label>
+        <button onclick="this.closest('.song-row').remove();VELONIA.FormBuilder._reindexSongRows()" style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:16px;flex-shrink:0;">✕</button>
+      </div>
+      <input class="form-input song-feat" placeholder="feat. (optional)" style="width:100%;font-size:11px;margin-bottom:6px;">
+      <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px;">
+        <span style="font-size:9px;padding:2px 7px;border-radius:3px;background:rgba(255,0,0,0.15);color:#ff5555;border:1px solid rgba(255,0,0,0.3);font-family:'Orbitron',monospace;flex-shrink:0;">YT</span>
+        <input class="form-input song-yt" placeholder="YouTube Video ID" style="flex:1;font-size:11px;font-family:'Space Mono',monospace;">
+      </div>
+      <div style="display:flex;gap:6px;align-items:center;">
+        <span style="font-size:9px;padding:2px 7px;border-radius:3px;background:rgba(30,215,96,0.12);color:#1db954;border:1px solid rgba(30,215,96,0.3);font-family:'Orbitron',monospace;flex-shrink:0;">SP</span>
+        <input class="form-input song-sp" placeholder="Spotify URL" style="flex:1;font-size:11px;">
+      </div>`;
+    rows.appendChild(div);
+    div.querySelector('.song-title')?.focus();
+  },
+
+  _reindexSongRows() {
+    document.querySelectorAll('#song-rows .song-row').forEach((row, i) => {
+      row.dataset.idx = i;
+      const n = row.querySelector('.song-idx'); if (n) n.textContent = i+1;
+    });
   },
 
   _fieldHtml(f, value, state) {
@@ -6590,6 +6677,27 @@ const FormBuilder = {
     // Banner
     const bannerEl = document.getElementById('img-banner');
     data.bannerUrl = bannerEl ? bannerEl.value.trim() : (defaults.bannerUrl || '');
+
+    // ── Collect songs (tracklist) ─────────────────────────────
+    const songRows = document.querySelectorAll('#song-rows .song-row');
+    if (songRows.length > 0) {
+      data.songs = Array.from(songRows).map(row => {
+        const title = row.querySelector('.song-title')?.value.trim() || '';
+        if (!title) return null;
+        return {
+          title,
+          duration:   row.querySelector('.song-dur')?.value.trim()   || '',
+          featuring:  row.querySelector('.song-feat')?.value.trim()  || '',
+          youtubeId:  row.querySelector('.song-yt')?.value.trim()    || '',
+          spotifyUrl: row.querySelector('.song-sp')?.value.trim()    || '',
+          isTitle:    row.querySelector('.song-is-title')?.checked   || false,
+        };
+      }).filter(Boolean);
+      data.tracks = data.songs.map(s => s.title); // legacy compat
+    } else {
+      data.songs  = defaults.songs  || [];
+      data.tracks = defaults.tracks || [];
+    }
 
     return data;
   },
@@ -8918,11 +9026,146 @@ const MusicPage = {
     if (panel) panel.style.display = 'block';
     const map = {
       releases: () => this._renderReleases(),
+      songs:    () => this._renderSongs(),
       artists:  () => this._renderByArtist(),
       groups:   () => this._renderByGroup(),
       timeline: () => this._renderTimeline(),
     };
     if (map[tab]) map[tab]();
+  },
+
+  // ── Songs browse tab (Spotify-style) ─────────────────
+  _renderSongs() {
+    const el = document.getElementById('mt-songs'); if (!el) return;
+    const state  = this._state();
+    const albums = this._albums();
+
+    // Flatten all songs from all albums into a single list
+    const allSongs = [];
+    albums.forEach(album => {
+      (album.songs || []).forEach((s, si) => {
+        const title  = typeof s === 'string' ? s : (s.title || '');
+        if (!title) return;
+        const song   = typeof s === 'object' ? s : { title };
+        allSongs.push({
+          ...song,
+          title,
+          _albumId:    album.id,
+          _albumTitle: album.title,
+          _albumEmoji: album.emoji || '💿',
+          _albumColor: album.color || '#b060ff',
+          _albumCover: album.coverUrl || '',
+          _trackIdx:   si,
+          _artist:     album.artist || album.group || '',
+          _chars:      (album.characterIds||[]).map(id=>(state.characters||[]).find(c=>c.id==id)).filter(Boolean),
+        });
+      });
+    });
+
+    if (allSongs.length === 0) {
+      el.innerHTML = `
+        <div style="text-align:center;padding:60px;color:var(--text-secondary);">
+          <div style="font-size:48px;margin-bottom:16px;">🎵</div>
+          <div style="font-family:'Orbitron',monospace;font-size:14px;">No songs yet</div>
+          <div style="font-size:12px;color:var(--text-dim);margin-top:8px;">Edit an album in Admin → add tracks with the tracklist editor</div>
+        </div>`; return;
+    }
+
+    // Filter state
+    const searchEl = el.querySelector('#songs-search');
+    const filterEl = el.querySelector('#songs-filter');
+    const q     = searchEl?.value.toLowerCase() || '';
+    const filt  = filterEl?.value || 'all';
+
+    let songs = allSongs;
+    if (q) songs = songs.filter(s =>
+      s.title.toLowerCase().includes(q) ||
+      s._albumTitle.toLowerCase().includes(q) ||
+      s._artist.toLowerCase().includes(q) ||
+      (s.featuring||'').toLowerCase().includes(q) ||
+      s._chars.some(c=>c.name.toLowerCase().includes(q))
+    );
+    if (filt === 'youtube')  songs = songs.filter(s => s.youtubeId);
+    if (filt === 'spotify')  songs = songs.filter(s => s.spotifyUrl);
+    if (filt === 'title')    songs = songs.filter(s => s.isTitle);
+
+    const nowAlbum = window.VELONIA.MediaManager.current();
+    const nowIdx   = this._currentTrackIdx;
+
+    el.innerHTML = `
+      <!-- Toolbar -->
+      <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;align-items:center;">
+        <div class="chars-search-wrap" style="flex:1;min-width:200px;">
+          <span class="chars-search-icon">🔍</span>
+          <input class="chars-search" id="songs-search" placeholder="Search songs, albums, artists..."
+            oninput="VELONIA.MusicPage._renderSongs()" value="${q}">
+        </div>
+        <select class="form-select" id="songs-filter" onchange="VELONIA.MusicPage._renderSongs()" style="width:auto;padding:8px 12px;font-size:11px;">
+          <option value="all">All Songs</option>
+          <option value="title">Title Tracks Only</option>
+          <option value="youtube">Has YouTube</option>
+          <option value="spotify">Has Spotify</option>
+        </select>
+        <span style="font-size:11px;color:var(--text-secondary);">${songs.length} song${songs.length!==1?'s':''}</span>
+      </div>
+
+      <!-- Song list -->
+      <div style="display:flex;flex-direction:column;gap:2px;">
+        ${songs.map((s, displayIdx) => {
+          const isNow = nowAlbum?.id === s._albumId && nowIdx === s._trackIdx;
+          const hasYT = !!s.youtubeId;
+          const hasSP = !!s.spotifyUrl;
+          return `
+            <div onclick="VELONIA.MusicPage._playTrack(${s._albumId}, ${s._trackIdx})"
+              style="display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:8px;cursor:pointer;transition:all 0.15s;background:${isNow?`${s._albumColor}18`:'transparent'};"
+              onmouseenter="this.style.background='rgba(255,255,255,0.05)'"
+              onmouseleave="this.style.background='${isNow?s._albumColor+'18':'transparent'}'">
+              <!-- Track number / play indicator -->
+              <div style="width:24px;text-align:center;flex-shrink:0;">
+                ${isNow
+                  ? `<span style="color:${s._albumColor};font-size:13px;">▶</span>`
+                  : `<span style="font-size:11px;color:var(--text-dim);">${displayIdx+1}</span>`}
+              </div>
+              <!-- Album art -->
+              <div style="width:40px;height:40px;border-radius:6px;overflow:hidden;flex-shrink:0;background:linear-gradient(135deg,${s._albumColor}44,${s._albumColor}11);display:flex;align-items:center;justify-content:center;font-size:18px;">
+                ${s._albumCover ? `<img src="${this._esc(s._albumCover)}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">` : ''}
+                <span ${s._albumCover?'style="display:none"':''}>${this._esc(s._albumEmoji)}</span>
+              </div>
+              <!-- Song info -->
+              <div style="flex:1;min-width:0;">
+                <div style="font-size:13px;font-weight:${s.isTitle?'700':'400'};color:${isNow?s._albumColor:'var(--text-primary)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                  ${this._esc(s.title)}
+                  ${s.isTitle?`<span style="font-size:9px;background:${s._albumColor}33;color:${s._albumColor};padding:1px 5px;border-radius:3px;margin-left:6px;vertical-align:middle;">TITLE</span>`:''}
+                </div>
+                <div style="font-size:11px;color:var(--text-secondary);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                  ${s._chars.length > 0
+                    ? s._chars.map(c=>this._esc(c.name)).join(', ')
+                    : this._esc(s._artist)}
+                  ${s.featuring ? ` <span style="color:var(--text-dim);">feat. ${this._esc(s.featuring)}</span>` : ''}
+                  <span style="color:var(--text-dim);"> · ${this._esc(s._albumTitle)}</span>
+                </div>
+              </div>
+              <!-- Embed badges -->
+              <div style="display:flex;gap:5px;flex-shrink:0;align-items:center;">
+                ${hasYT?`<span style="font-size:9px;padding:1px 6px;border-radius:3px;background:rgba(255,0,0,0.15);color:#ff5555;border:1px solid rgba(255,0,0,0.3);">YT</span>`:''}
+                ${hasSP?`<span style="font-size:9px;padding:1px 6px;border-radius:3px;background:rgba(30,215,96,0.12);color:#1db954;border:1px solid rgba(30,215,96,0.3);">SP</span>`:''}
+              </div>
+              <!-- Duration -->
+              <div style="font-size:11px;color:var(--text-dim);font-family:'Space Mono',monospace;flex-shrink:0;min-width:32px;text-align:right;">${this._esc(s.duration||'')}</div>
+              <!-- Album link -->
+              <button onclick="event.stopPropagation();VELONIA.MusicPage.openAlbumDetail(${s._albumId})"
+                style="background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:14px;flex-shrink:0;padding:4px;opacity:0;transition:opacity 0.2s;"
+                class="song-album-btn" title="Open album">💿</button>
+            </div>`;
+        }).join('')}
+      </div>
+    `;
+
+    // Preserve search/filter values after re-render
+    if (searchEl) {
+      const newSearch = el.querySelector('#songs-search');
+      if (newSearch && q) newSearch.value = q;
+    }
   },
 
   // ── Releases tab ─────────────────────────────────────
